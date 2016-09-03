@@ -3,7 +3,6 @@
 #include "Particle.h"
 #include "IParticleEmitter.h"
 #include "IParticleRegion.h"
-#include "ParticleStorage.h"
 #include <string>
 
 /*-----------------------------------------------------------------------------------------------
@@ -20,7 +19,7 @@ class ParticleUpdater
 public:
     ParticleUpdater();
     
-    void Init(const std::string &computeShaderKey, const ParticleStorage &particles);
+    void Init(const std::string &computeShaderKey);
     void Update(const float deltaTimeSec) const;
 
     void SetRegion(const IParticleRegion *pRegion);
@@ -34,7 +33,11 @@ public:
 
 private:
     std::string _computeShaderKey;
-    unsigned int _computeShaderBufferId;
+    unsigned int _unifLocPolygonFaceCount;
+    unsigned int _unifLocDeltaTimeSec;
+    unsigned int _unifLocRadiusSqr;
+    unsigned int _unifLocParticleRegionCircleCenter;
+    unsigned int _unifLocPointEmitterCenter;
 
     // the form "const something *" means that it is a pointer to a const something, so the 
     // pointer can be changed for a new region or emitter, but the region or emitter itself 

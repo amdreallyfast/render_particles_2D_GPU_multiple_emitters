@@ -1,5 +1,6 @@
 #include "ParticleUpdater.h"
 
+#include "ShaderStorage.h"
 #include "ParticleRegionCircle.h"
 #include "ParticleRegionPolygon.h"
 
@@ -25,11 +26,26 @@ ParticleUpdater::ParticleUpdater() //:
 // TODO: header
 // computeShaderKey: used to access the shader program in the shader storage object
 // particles: the collection of Particle data that is to be uploaded to the GPU
-void ParticleUpdater::Init(const std::string &computeShaderKey, const ParticleStorage &particles)
+void ParticleUpdater::Init(const std::string &computeShaderKey)
 {
     _computeShaderKey = computeShaderKey;
+    
+    ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
+    GLuint computeProgramId = shaderStorageRef.GetShaderProgram(_computeShaderKey);
+
+    _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
+    _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
+    _unifLocRadiusSqr = shaderStorageRef.GetUniformLocation(computeShaderKey, "uRadiusSqr");
+    _unifLocParticleRegionCircleCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleRegionCircleCenter");
+    _unifLocPointEmitterCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPointEmitterCenter");
 
     // TODO: find uniforms and store them in this class
+    //uniform uint uParticleCount;
+    //uniform uint uPolygonFaceCount;
+    //uniform float uDeltaTimeSec;
+    // uniform float uRadiusSqr;
+    // uniform vec4 uParticleRegionCircleCenter;
+
 
     // TODO: query work group counts and size (??move to display code??)
 

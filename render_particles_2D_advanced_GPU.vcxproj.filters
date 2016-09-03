@@ -18,9 +18,6 @@
     <ClCompile Include="ParticleRegionCircle.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleStorage.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
     <ClCompile Include="PrimitiveGeneration.cpp">
       <Filter>Solids</Filter>
     </ClCompile>
@@ -40,6 +37,9 @@
     </ClCompile>
     <ClCompile Include="Stopwatch.cpp">
       <Filter>RenderFrameRate</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleStorageGpu.cpp">
+      <Filter>Particles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -71,9 +71,6 @@
     <ClInclude Include="ParticleRegionCircle.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleStorage.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
     <ClInclude Include="PrimitiveGeneration.h">
       <Filter>Solids</Filter>
     </ClInclude>
@@ -90,6 +87,9 @@
     </ClInclude>
     <ClInclude Include="Stopwatch.h">
       <Filter>RenderFrameRate</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleStorageGpu.h">
+      <Filter>Particles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

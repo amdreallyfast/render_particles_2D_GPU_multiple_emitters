@@ -142,25 +142,22 @@ struct PolygonFace
     vec4 _p2;
 };
 
-// the global work item number of the compute shader is used as the index into the 
-// AllParticles array, but that number may be greater than the actual buffer size and so needs 
-// to be held in check by this value
-uniform uint uParticleCount;
+const uint ParticleCount = 15000;
 
 // every particle needs to be checked against every face of the polygon, and I need to know the 
 // size of the PolygonRegionFaces array in order to loop through them
 uniform uint uPolygonFaceCount;
 
-// the Particle structure contains two vec4s and an int, so it uses up 3 binding locations
+// Note: According to the documentation for shader storage buffer objects, "there can only be 
+// one array of variable size per SSBO and it has to be the bottommost in the layout definition."
+// See here: https://www.opengl.org/wiki/Shader_Storage_Buffer_Object.
+// Also Note: Size there can only be one variable-size array, one of these had to be constant.  
+// It is easier to make the particle count constant than it is to restrict the number of 
+// vertices, so the particle count was fixed.
 layout (binding = 0) buffer ParticleBuffer 
 {
-    Particle AllParticles[];
-};
-
-// the ParticleBuffer layout took up 3 binding locations (0, 1, and 2), so this one takes the next one
-// TODO: ??does a structure take up a single binding or one for each of its members??
-layout (binding = 4) buffer PolygonFaceBuffer 
-{
+    // the array size MUST match the max particle count on the CPU side or else too many work items will be invoked or too few for the array size
+    Particle AllParticles[ParticleCount];
     PolygonFace PolygonRegionFaces[];
 };
 

@@ -93,19 +93,6 @@ const unsigned int MAX_PARTICLE_COUNT = 15000;
 ParticleStorage gParticleStorage;
 
 
-void InitComputeShader(GLuint programId)
-{
-    ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
-
-
-    //uniform uint uParticleCount;
-    //uniform uint uPolygonFaceCount;
-    //uniform float uDeltaTimeSec;
-    // uniform float uRadiusSqr;
-    // uniform vec4 uParticleRegionCircleCenter;
-
-}
-
 /*-----------------------------------------------------------------------------------------------
 Description:
     Governs window creation, the initial OpenGL configuration (face culling, depth mask, even
@@ -242,6 +229,13 @@ Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void Display()
 {
+
+    // TODO: in rendering shader, if particle is not active (if necessary, turn on the vertex attrib pointers that account for it), then make it black so that it won't show up
+
+
+
+
+
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
