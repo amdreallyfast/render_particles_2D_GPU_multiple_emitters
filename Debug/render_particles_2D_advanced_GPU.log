@@ -1,0 +1,9 @@
+﻿Build started 9/3/2016 10:01:45 AM.
+     1>Project "C:\Users\John\Documents\GitHub\OpenGL barebones\render_particles_2D_advanced_GPU\render_particles_2D_advanced_GPU.vcxproj" on node 2 (Build target(s)).
+     1>Link:
+         render_particles_2D_advanced_GPU.vcxproj -> C:\Users\John\Documents\GitHub\OpenGL barebones\render_particles_2D_advanced_GPU\Debug\render_particles_2D_advanced_GPU.exe
+     1>Done Building Project "C:\Users\John\Documents\GitHub\OpenGL barebones\render_particles_2D_advanced_GPU\render_particles_2D_advanced_GPU.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.91
