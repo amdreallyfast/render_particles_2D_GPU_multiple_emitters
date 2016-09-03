@@ -1,4 +1,4 @@
-#include "ParticleUpdater.h"
+#include "ParticleUpdaterGpu.h"
 
 #include "ShaderStorage.h"
 #include "ParticleRegionCircle.h"
@@ -12,7 +12,7 @@ Returns:    None
 Exception:  Safe
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-ParticleUpdater::ParticleUpdater() //:
+ParticleUpdaterGpu::ParticleUpdaterGpu() //:
     //_pRegion(0)
 {
     //for (size_t emitterIndex = 0; emitterIndex < MAX_EMITTERS; emitterIndex++)
@@ -26,7 +26,7 @@ ParticleUpdater::ParticleUpdater() //:
 // TODO: header
 // computeShaderKey: used to access the shader program in the shader storage object
 // particles: the collection of Particle data that is to be uploaded to the GPU
-void ParticleUpdater::Init(const std::string &computeShaderKey)
+void ParticleUpdaterGpu::Init(const std::string &computeShaderKey)
 {
     _computeShaderKey = computeShaderKey;
     
@@ -61,7 +61,7 @@ Returns:    None
 Exception:  Safe
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-void ParticleUpdater::SetRegion(const IParticleRegion *pRegion)
+void ParticleUpdaterGpu::SetRegion(const IParticleRegion *pRegion)
 {
     //_pRegion = pRegion;
     if (dynamic_cast<const ParticleRegionCircle *>(pRegion) == 0)
@@ -89,7 +89,7 @@ Returns:    None
 Exception:  Safe
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-void ParticleUpdater::AddEmitter(const IParticleEmitter *pEmitter, const int maxParticlesEmittedPerFrame)
+void ParticleUpdaterGpu::AddEmitter(const IParticleEmitter *pEmitter, const int maxParticlesEmittedPerFrame)
 {
     if (_emitterCount >= MAX_EMITTERS)
     {
@@ -118,7 +118,7 @@ Returns:    None
 Exception:  Safe
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-void ParticleUpdater::Update(std::vector<Particle> &particleCollection, 
+void ParticleUpdaterGpu::Update(std::vector<Particle> &particleCollection, 
     const unsigned int startIndex, const unsigned int numToUpdate, const float deltaTimeSec) const
 {
     if (_emitterCount == 0 || _pRegion == 0)
@@ -190,7 +190,7 @@ void ParticleUpdater::Update(std::vector<Particle> &particleCollection,
     }
 }
 
-void ParticleUpdater::ResetAllParticles(std::vector<Particle> &particleCollection)
+void ParticleUpdaterGpu::ResetAllParticles(std::vector<Particle> &particleCollection)
 {
     // reset all particles evenly 
     // Note: I could do a weighted fancy algorithm and account for the "particles emitted per frame" for each emitter, but this is just a demo program.

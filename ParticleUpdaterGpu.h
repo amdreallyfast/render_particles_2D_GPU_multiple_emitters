@@ -14,10 +14,10 @@ Description:
     only using const pointers.
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-class ParticleUpdater
+class ParticleUpdaterGpu
 {
 public:
-    ParticleUpdater();
+    ParticleUpdaterGpu();
     
     void Init(const std::string &computeShaderKey);
     void Update(const float deltaTimeSec) const;
