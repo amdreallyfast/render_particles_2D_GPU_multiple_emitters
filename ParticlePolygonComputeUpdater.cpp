@@ -1,4 +1,4 @@
-#include "ParticleUpdaterGpu.h"
+#include "ParticlePolygonComputeUpdater.h"
 
 #include "ShaderStorage.h"
 #include "ParticleRegionCircle.h"
@@ -47,7 +47,15 @@ void ParticleUpdaterGpu::Init(const std::string &computeShaderKey)
     // uniform vec4 uParticleRegionCircleCenter;
 
 
+
+
     // TODO: query work group counts and size (??move to display code??)
+
+
+    // TODO:
+    // - ParticleStorageGpu.h/cpp -> ParticlePolygonSsbo.h/cpp (need to represent each compute shader's SSBO)
+    // - particleMain.comp -> PaticlePolygon.comp
+    // - ParticleUpdaterGpu -> ParticlePolygonComputeUpdater.h/cpp (each compute shader will have its own set of uniforms)
 
     // generate the storage 
 }

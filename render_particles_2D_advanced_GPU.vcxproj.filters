@@ -3,9 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OpenGlErrorHandling.cpp" />
-    <ClCompile Include="ParticleUpdater.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
     <ClCompile Include="ParticleEmitterPoint.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
@@ -38,8 +35,14 @@
     <ClCompile Include="Stopwatch.cpp">
       <Filter>RenderFrameRate</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleStorageGpu.cpp">
+    <ClCompile Include="ParticlePolygonComputeUpdater.cpp">
       <Filter>Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSsbo.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="PolygonFaceSsbo.cpp">
+      <Filter>Buffers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,9 +63,6 @@
       <Filter>Particles</Filter>
     </ClInclude>
     <ClInclude Include="ParticleRegionPolygon.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleUpdater.h">
       <Filter>Particles</Filter>
     </ClInclude>
     <ClInclude Include="ShaderStorage.h">
@@ -88,8 +88,15 @@
     <ClInclude Include="Stopwatch.h">
       <Filter>RenderFrameRate</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleStorageGpu.h">
+    <ClInclude Include="ParticlePolygonComputeUpdater.h">
       <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSsbo.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonFace.h" />
+    <ClInclude Include="PolygonFaceSsbo.h">
+      <Filter>Buffers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -114,7 +121,7 @@
     <None Include="shaderVersion.whatevs">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="particleMain.comp">
+    <None Include="particlePolygonRegion.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -130,6 +137,9 @@
     </Filter>
     <Filter Include="RenderFrameRate">
       <UniqueIdentifier>{2e6cc6b5-9657-45b5-bcf9-ec3208c12d32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Buffers">
+      <UniqueIdentifier>{a3e1fffa-b362-4527-9368-9305fcca5aec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

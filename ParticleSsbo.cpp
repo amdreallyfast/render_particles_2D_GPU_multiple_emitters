@@ -1,9 +1,9 @@
-#include "ParticleStorageGpu.h"
+#include "ParticleSsbo.h"
 
 #include <vector>
 
 #include "glload/include/glload/gl_4_4.h"
-#include "ShaderStorage.h"
+
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -13,9 +13,9 @@ Description:
 Parameters: None
 Returns:    None
 Exception:  Safe
-Creator:    John Cox (7-4-2016)
+Creator:    John Cox (9-6-2016)
 -----------------------------------------------------------------------------------------------*/
-ParticleStorageGpu::ParticleStorageGpu() :
+ParticleSsbo::ParticleSsbo() :
     _vaoId(0),
     _bufferId(0),
     _drawStyle(0)
@@ -23,7 +23,7 @@ ParticleStorageGpu::ParticleStorageGpu() :
 }
 
 // TODO: header
-ParticleStorageGpu::~ParticleStorageGpu()
+ParticleSsbo::~ParticleSsbo()
 {
     glDeleteVertexArrays(1, &_vaoId);
     glDeleteBuffers(1, &_bufferId);
@@ -33,28 +33,28 @@ ParticleStorageGpu::~ParticleStorageGpu()
 // TODO: header
 // Note: Creating the shader storage buffer does not require the compute shader's program ID and so the compute shader's key is not necessary.  This method only needs the render shader's key because the vertex attrib arrays are determined here.  
 // Note: Particles are loaded onto the GPU in this function in their "zero" state, which means that their position and velocity default to 0s and their "is active" flag defaults to false.  It is ok that they are not initialized with any emitters because, as the compute shader runs, it will reset any inactive particles that it comes across, and the particle rendering shader will render inactive particles as black.  This will still look ok.
-void ParticleStorageGpu::Init(unsigned int numParticles, const std::string &renderShaderKey)
+void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
 {
     _drawStyle = GL_POINTS;
 
     std::vector<Particle> allParticles(numParticles);
 
-    // setting up this buffer does not require 
+    // setting up this buffer does not require a program ID
     _bufferId = 0;
     glGenBuffers(1, &_bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * numParticles, allParticles.data(), 
         GL_STATIC_DRAW);
+    // TODO: ??glBindBufferBase??
     // don't bother with glBindBufferBase(...) because the compute shader already specifies a 
     // binding location 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // set up the VAO
     // now set up the vertex array indices for the drawing shader
     // Note: MUST bind the program beforehand or else the VAO binding will blow up.  It won't 
     // spit out an error but will rather silently bind to whatever program is currently bound, 
     // even if it is the undefined program 0.
-    ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
-    GLuint renderProgramId = shaderStorageRef.GetShaderProgram(renderShaderKey);
     glUseProgram(renderProgramId);
     glGenVertexArrays(1, &_vaoId);
     glBindVertexArray(_vaoId);
@@ -105,4 +105,21 @@ void ParticleStorageGpu::Init(unsigned int numParticles, const std::string &rend
     glUseProgram(0);    // render program
 }
 
+// TODO: header
+unsigned int ParticleSsbo::VaoId() const
+{
+    return _vaoId;
+}
+
+// TODO: header
+unsigned int ParticleSsbo::BufferId() const
+{
+    return _bufferId;
+}
+
+// TODO: header
+unsigned int ParticleSsbo::DrawStyle() const
+{
+    return _drawStyle;
+}
 

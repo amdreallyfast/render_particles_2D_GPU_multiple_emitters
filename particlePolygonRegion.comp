@@ -140,26 +140,27 @@ struct PolygonFace
 {
     vec4 _p1;
     vec4 _p2;
+    vec4 _normal;
 };
 
-const uint ParticleCount = 15000;
-
-// every particle needs to be checked against every face of the polygon, and I need to know the 
-// size of the PolygonRegionFaces array in order to loop through them
-uniform uint uPolygonFaceCount;
+uniform uint uParticleCount;
 
 // Note: According to the documentation for shader storage buffer objects, "there can only be 
 // one array of variable size per SSBO and it has to be the bottommost in the layout definition."
 // See here: https://www.opengl.org/wiki/Shader_Storage_Buffer_Object.
-// Also Note: Size there can only be one variable-size array, one of these had to be constant.  
-// It is easier to make the particle count constant than it is to restrict the number of 
-// vertices, so the particle count was fixed.
 layout (binding = 0) buffer ParticleBuffer 
 {
-    // the array size MUST match the max particle count on the CPU side or else too many work items will be invoked or too few for the array size
-    Particle AllParticles[ParticleCount];
-    PolygonFace PolygonRegionFaces[];
+    Particle AllParticles[];
 };
+
+// every particle needs to be checked against every face of the polygon, and I need to know the 
+// size of the PolygonRegionFaces array in order to loop through them
+uniform uint uPolygonFaceCount;
+layout (binder = 1) buffer FaceBuffer
+{
+    PolygonFace PolygonRegionFaces[];
+}
+
 
 uniform float uDeltaTimeSec;
 
@@ -192,36 +193,68 @@ float RandHash(vec4 co)
 uniform float uRadiusSqr;
 uniform vec4 uParticleRegionCircleCenter;
 
+///************************************************************************************************
+//Description:
+//    Checks if the provided particle has gone outside of a circle defined by a uniform center and 
+//    a uniform radius.
+//
+//    Why uniforms?  Because this function's cousin, "particle out of bounds polygon" cannot take 
+//    a buffer as an argument and so must rely on a uniform buffer object and other uniforms, so I 
+//    decided to make this function also use the same handicap.  It makes the coding consistent.
+//Parameters:
+//    p       A Particle instance.  It is not a reference or a pointer, but a copy.  It can 
+//            therefore be used as a local variable, but as a matter of personal coding principle, 
+//            I do not use an argument as a local variable.
+//Returns:
+//    True if the particle is outside the circle's bounds, otherwise false.
+//Creator:    John Cox, 9-3-2016
+//************************************************************************************************/
+//bool ParticleOutOfBoundsCircle(Particle p)
+//{
+//    vec4 particleToRegionCenter = p._pos - uParticleRegionCircleCenter;
+//    float distSqr = dot(particleToRegionCenter, particleToRegionCenter);
+//
+//    if (distSqr > uRadiusSqr)
+//    {
+//        return true;
+//    }
+//
+//    // still in bounds
+//    return false;
+//}
+
 /************************************************************************************************
 Description:
-    Checks if the provided particle has gone outside of a circle defined by a uniform center and 
-    a uniform radius.
+    Checks if the provided particle has gone outside of any of the faces of the polygon region
+    that is defined in the PolygonRegionFaces array.  
 
-    Why uniforms?  Because this function's cousin, "particle out of bounds polygon" cannot take 
-    a buffer as an argument and so must rely on a uniform buffer object and other uniforms, so I 
-    decided to make this function also use the same handicap.  It makes the coding consistent.
+    Note: This algorithm only works on concave polygons.  That is, it only works on a polygon in 
+    which all face normals point roughly towards the center.  The algorithm simply checks if a 
+    vector from the face center to the particle's position is more than 90 degrees away from the 
+    face normal.
 Parameters:
     p       A Particle instance.  It is not a reference or a pointer, but a copy.  It can 
             therefore be used as a local variable, but as a matter of personal coding principle, 
             I do not use an argument as a local variable.
 Returns:
-    True if the particle is outside the circle's bounds, otherwise false.
-Creator:    John Cox, 9-3-2016
+    True if the particle is out of bounds, otherwise false.
+Creator:    John Cox, 9-5-2016
 ************************************************************************************************/
-bool ParticleOutOfBoundsCircle(Particle p)
+bool ParticleOutOfBoundsPolygon(Particle p)
 {
-    vec4 particleToRegionCenter = p._pos - uParticleRegionCircleCenter;
-    float distSqr = dot(particleToRegionCenter, particleToRegionCenter);
-
-    if (distSqr > uRadiusSqr)
+    for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
     {
-        return true;
+        PolygonFace f = PolygonRegionFaces[faceIndex];
+
+        vec4 faceToParticle = p._pos - f._centerPoint;
+        if (dot(faceToParticle, f._normal) < 0))
+        {
+            return true;
+        }
     }
 
-    // still in bounds
     return false;
 }
-
 
 
 uniform vec4 uPointEmitterCenter;
@@ -292,7 +325,7 @@ void main()
         p._pos = p._pos + deltaPosition;
 
         // if it went out of bounds, reset it
-        if (ParticleOutOfBoundsCircle(p))
+        if (ParticleOutOfBoundsPolygon(p))
         {
             PointEmitterResetPos(p);
         }
