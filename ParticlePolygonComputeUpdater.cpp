@@ -36,17 +36,6 @@ void ParticlePolygonComputeUpdater::Init(const std::string &computeShaderKey)
     ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
     _computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
 
-    int unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleCount");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uRadiusSqr");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleRegionCircleCenter");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPointEmitterCenter");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarP1");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarP2");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceRegionTransform");
-    unifLoc = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceEmitterTransform");
-
     _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
     _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
     _unifLocRadiusSqr = shaderStorageRef.GetUniformLocation(computeShaderKey, "uRadiusSqr");

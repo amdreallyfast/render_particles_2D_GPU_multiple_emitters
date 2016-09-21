@@ -283,17 +283,6 @@ void ShaderStorage::AddShaderFile(const std::string &programKey, const std::stri
         // inserations, so this notation is ok.
         _shaderBinaries[programKey].push_back(shaderId);
     }
-
-    GLint infoLogLen;
-    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLen);
-    if (infoLogLen > 0)
-    {
-        GLchar *logString = new char[infoLogLen + 1];
-        glGetShaderInfoLog(shaderId, infoLogLen, 0, logString);
-        fprintf(stderr, "Program '%s' info log: \n%s", programKey.c_str(), logString);
-        delete logString;
-    }
-
 }
 
 /*-----------------------------------------------------------------------------------------------

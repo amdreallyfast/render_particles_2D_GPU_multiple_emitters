@@ -192,11 +192,7 @@ void Init()
     //InitComputeShader(computeProgramId);
     gParticleComputeUpdater.Init(computeShaderKey);
 
-    int iVar = 0;
-    glGetProgramiv(shaderStorageRef.GetShaderProgram(computeShaderKey), GL_ACTIVE_UNIFORM_MAX_LENGTH, &iVar);
-    glGetProgramiv(shaderStorageRef.GetShaderProgram(computeShaderKey), GL_MAX_DRAW_BUFFERS, &iVar);
-    int i = glGetUniformLocation(shaderStorageRef.GetShaderProgram(computeShaderKey), "uBargle");
-    
+
     
     //// generate a circular particle region, point and bar particle emitters, and join them them in a particle updater
     
@@ -339,13 +335,13 @@ void Display()
     ////gParticleUpdater.Update(gParticleStorage._allParticles, 0, 
     ////    gParticleStorage._allParticles.size(), 0.01f);
 
-    //// draw the particles
-    //glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
-    //glBindVertexArray(gParticleBuffer.VaoId());
-    ////glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
-    ////glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
-    ////glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
-    //glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
+    // draw the particles
+    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
+    glBindVertexArray(gParticleBuffer.VaoId());
+    //glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
+    //glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
+    //glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
+    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
 
 
 
@@ -354,7 +350,8 @@ void Display()
 
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
-    glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
+    //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
+    //glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
     glBindVertexArray(gPolygonFaceBuffer.VaoId());
     //glBindVertexArray(gCircleGeometry._vaoId);
     //glDrawElements(gCircleGeometry._drawStyle, gCircleGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);

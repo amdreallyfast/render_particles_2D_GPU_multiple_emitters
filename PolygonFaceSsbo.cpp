@@ -17,11 +17,13 @@ PolygonFaceSsbo::~PolygonFaceSsbo()
 void PolygonFaceSsbo::Init(const std::vector<PolygonFace> &faceCollection, unsigned int renderProgramId)
 {
     _drawStyle = GL_LINES;
+    _numVertices = faceCollection.size();
 
     // the compute shader program is not required for buffer creation
     glGenBuffers(1, &_bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PolygonFace) * faceCollection.size(), faceCollection.data(), GL_STATIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // the render program is required for vertex attribute initialization or else the program WILL crash at runtime
