@@ -327,25 +327,35 @@ void Display()
 
     // TODO: ??in the update method, bind both buffer bases to different binding points??
 
-    //??why isn't it drawing anything??
-    gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.01f);
 
 
 
-    //gParticleUpdater.Update(gParticleStorage._allParticles, 0, 
-    //    gParticleStorage._allParticles.size(), 0.01f);
 
-    // draw the particles
-    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
-    glBindVertexArray(gParticleBuffer.VaoId());
-    //glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
-    //glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
-    //glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
-    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
+    ////??why isn't it drawing anything??
+    //gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.01f);
+
+
+
+    ////gParticleUpdater.Update(gParticleStorage._allParticles, 0, 
+    ////    gParticleStorage._allParticles.size(), 0.01f);
+
+    //// draw the particles
+    //glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
+    //glBindVertexArray(gParticleBuffer.VaoId());
+    ////glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
+    ////glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
+    ////glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
+    //glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
+
+
+
+
+
 
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
+    glBindVertexArray(gPolygonFaceBuffer.VaoId());
     //glBindVertexArray(gCircleGeometry._vaoId);
     //glDrawElements(gCircleGeometry._drawStyle, gCircleGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
     //glBindVertexArray(gPolygonGeometry._vaoId);
