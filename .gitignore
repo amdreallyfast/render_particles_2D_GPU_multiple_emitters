@@ -246,5 +246,3 @@ _Pvt_Extensions
 # JetBrains Rider
 .idea/
 *.sln.iml
-Debug/render_particles_2D_advanced_GPU.log
-*.log
