@@ -42,16 +42,20 @@
 #include "ShaderStorage.h"
 
 // for drawing shapes
-#include "GeometryData.h"
-#include "PrimitiveGeneration.h"
+//#include "GeometryData.h"
+//#include "PrimitiveGeneration.h"
 
-// for particles
-#include "ParticleRegionCircle.h"
-#include "ParticleRegionPolygon.h"
-#include "ParticleEmitterPoint.h"
-#include "ParticleEmitterBar.h"
-#include "ParticleStorage.h"
-#include "ParticleUpdater.h"
+// for particles and where they live
+#include "glm/vec2.hpp"
+//#include "ParticleRegionCircle.h"
+//#include "ParticleRegionPolygon.h"
+//#include "ParticleEmitterPoint.h"
+//#include "ParticleEmitterBar.h"
+//#include "ParticleStorage.h"
+//#include "ParticleUpdater.h"
+#include "ParticleSsbo.h"
+#include "PolygonFaceSsbo.h"
+#include "ParticlePolygonComputeUpdater.h"
 
 // for moving the shapes around in window space
 #include "glm/gtc/matrix_transform.hpp"
@@ -69,28 +73,73 @@ FreeTypeEncapsulated gTextAtlases;
 // shader programs
 GLint gUnifMatrixTransformLoc;
 
-// in a bigger program, geometry data would be stored in some kind of "scene" or in a renderer
-// or behind door number 3 so that collision boxes could get at the vertex data
-GeometryData gCircleGeometry;
-GeometryData gPolygonGeometry;
+//// in a bigger program, geometry data would be stored in some kind of "scene" or in a renderer
+//// or behind door number 3 so that collision boxes could get at the vertex data
+//GeometryData gCircleGeometry;
+//GeometryData gPolygonGeometry;
+
+// ??stored in scene??
+ParticleSsbo gParticleBuffer;
+PolygonFaceSsbo gPolygonFaceBuffer;
 
 // in a bigger program, this would somehow be encapsulated and associated with both the circle
 // geometry and the circle particle region, and ditto for the polygon
 glm::mat4 gRegionTransformMatrix;
 
-// in a bigger program, ??where would particle stuff be stored??
-IParticleRegion *gpParticleRegionCircle;
-IParticleRegion *gpParticleRegionPolygon;
+//// in a bigger program, ??where would particle stuff be stored??
+//IParticleRegion *gpParticleRegionCircle;
+//IParticleRegion *gpParticleRegionPolygon;
 IParticleEmitter *gpParticleEmitterPoint;
-IParticleEmitter *gpParticleEmitterBar;
-ParticleUpdater gParticleUpdater;
+//IParticleEmitter *gpParticleEmitterBar;
+//ParticleUpdater gParticleUpdater;
+ParticlePolygonComputeUpdater gParticleComputeUpdater;
 
 // divide between the circle and the polygon regions
 // Note: 
 // - 10,000 particles => ~60 fps on my computer
 // - 15,000 particles => 30-40 fps on my computer
 const unsigned int MAX_PARTICLE_COUNT = 15000;
-ParticleStorage gParticleStorage;
+//ParticleStorage gParticleStorage;
+
+
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Encapsulates the rotating of a 2D vector by -90 degrees (+90 degrees not used in this demo).
+Parameters:
+    v   A const 2D vector.
+Returns:
+    A 2D vector rotated -90 degrees from the provided one.
+Exception:  Safe
+Creator:    John Cox (7-2-2016)
+-----------------------------------------------------------------------------------------------*/
+static glm::vec2 RotateNeg90(const glm::vec2 &v)
+{
+    return glm::vec2(v.y, -(v.x));
+}
+
+// TODO: header
+// Manually (it's a demo, so eh?) generates a polygon centered around the window space origin (0,0) with corners at:
+// - vec2(-0.25f, -0.5f);
+// - vec2(+0.25f, -0.5f);
+// - vec2(+0.5f, +0.25f);
+// - vec2(-0.5f, +0.25f);
+static void GeneratePolygonRegion(std::vector<PolygonFace> *polygonFaceCollection)
+{
+    glm::vec2 p1(-0.25f, -0.5f);
+    glm::vec2 p2(+0.25f, -0.5f);
+    glm::vec2 p3(+0.5f, +0.25f);
+    glm::vec2 p4(-0.5f, +0.25f);
+    PolygonFace face1(p1, p2, RotateNeg90(p2 - p1));
+    PolygonFace face2(p2, p3, RotateNeg90(p3 - p2));
+    PolygonFace face3(p3, p4, RotateNeg90(p4 - p3));
+    PolygonFace face4(p4, p1, RotateNeg90(p1 - p4));
+
+    polygonFaceCollection->push_back(face1);
+    polygonFaceCollection->push_back(face2);
+    polygonFaceCollection->push_back(face3);
+    polygonFaceCollection->push_back(face4);
+}
 
 
 /*-----------------------------------------------------------------------------------------------
@@ -131,83 +180,112 @@ void Init()
     
     
     // for the particle compute shader stuff
-    std::string computeShaderKey = "particleCompute";
+    std::string computeShaderKey = "compute particles";
     shaderStorageRef.NewShader(computeShaderKey);
     //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleStructure.comp");
     //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleMain.comp");
-    shaderStorageRef.AddShaderFile(computeShaderKey, "particleMain.comp", GL_COMPUTE_SHADER);
+    shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
     //shaderStorageRef.CompileComputeShader("particleCompute");
     //shaderStorageRef.LinkComputeShader("particleCompute");
     shaderStorageRef.LinkShader(computeShaderKey);
-    GLuint computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
-    InitComputeShader(computeProgramId);
+    //GLuint computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
+    //InitComputeShader(computeProgramId);
+    gParticleComputeUpdater.Init(computeShaderKey);
+
+    int iVar = 0;
+    glGetProgramiv(shaderStorageRef.GetShaderProgram(computeShaderKey), GL_ACTIVE_UNIFORM_MAX_LENGTH, &iVar);
+    glGetProgramiv(shaderStorageRef.GetShaderProgram(computeShaderKey), GL_MAX_DRAW_BUFFERS, &iVar);
+    int i = glGetUniformLocation(shaderStorageRef.GetShaderProgram(computeShaderKey), "uBargle");
     
     
-    // generate a circular particle region, point and bar particle emitters, and join them them in a particle updater
-    shaderStorageRef.NewShader("particles");
-    shaderStorageRef.AddShaderFile("particles", "particleRender.vert", GL_VERTEX_SHADER);
-    shaderStorageRef.AddShaderFile("particles", "particleRender.frag", GL_FRAGMENT_SHADER);
-    shaderStorageRef.LinkShader("particles");
-    GLuint particleProgramId = shaderStorageRef.GetShaderProgram("particles");
+    //// generate a circular particle region, point and bar particle emitters, and join them them in a particle updater
+    
+    // generate a point emitter and a polygon region
 
-    // the circle starts centered on the origin and the translate matrix will move it
-    // Note: The 1.0f makes it translatable.
-    gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
-    gRegionTransformMatrix *= glm::rotate(glm::mat4(), 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
-    // circular particle region
-    float circleRadius = 0.5f;
-    glm::vec2 circleCenter = glm::vec2(0.0f, 0.0f);
-    gpParticleRegionCircle = new ParticleRegionCircle(circleCenter, circleRadius);
-    gpParticleRegionCircle->SetTransform(gRegionTransformMatrix);
+    std::string renderParticlesShaderKey = "render particles";
+    shaderStorageRef.NewShader(renderParticlesShaderKey);
+    shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.vert", GL_VERTEX_SHADER);
+    shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.frag", GL_FRAGMENT_SHADER);
+    shaderStorageRef.LinkShader(renderParticlesShaderKey);
+
+    gParticleBuffer.Init(MAX_PARTICLE_COUNT, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+
+    //// the circle starts centered on the origin and the translate matrix will move it
+    //// Note: The 1.0f makes it translatable.
+    //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
+    //gRegionTransformMatrix *= glm::rotate(glm::mat4(), 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    //// circular particle region
+    //float circleRadius = 0.5f;
+    //glm::vec2 circleCenter = glm::vec2(0.0f, 0.0f);
+    //gpParticleRegionCircle = new ParticleRegionCircle(circleCenter, circleRadius);
+    //gpParticleRegionCircle->SetTransform(gRegionTransformMatrix);
 
     // polygon particle region
-    std::vector<glm::vec2> polygonCorners;
+    std::vector<PolygonFace> polygonFaces;
+    GeneratePolygonRegion(&polygonFaces);
+    gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+/*
     polygonCorners.push_back(glm::vec2(-0.25f, -0.5f));
     polygonCorners.push_back(glm::vec2(+0.25f, -0.5f));
     polygonCorners.push_back(glm::vec2(+0.5f, +0.25f));
     polygonCorners.push_back(glm::vec2(-0.5f, +0.25f));
+    gPolygonFaceBuffer.Init()
     gpParticleRegionPolygon = new ParticleRegionPolygon(polygonCorners);
-    gpParticleRegionPolygon->SetTransform(gRegionTransformMatrix);
+    gpParticleRegionPolygon->SetTransform(gRegionTransformMatrix);*/
 
 
-    // stick the point emitter in the center (changing this would only require some addition/subtraction from the "circle center"
-    gpParticleEmitterPoint = new ParticleEmitterPoint(circleCenter, 0.3f, 0.5f);
-    gpParticleEmitterPoint->SetTransform(gRegionTransformMatrix);
+    // stick the point emitter in the geometric center of the polygon region
+    // Note: Repeat points do exist, but the average will sort that out.
+    float sumFaceX = 0.0f;
+    float sumFaceY = 0.0f;
+    for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
+    {
+        const PolygonFace &pf = polygonFaces[faceIndex];
+        sumFaceX += pf._start.x + pf._end.x;
+        sumFaceY += pf._start.y + pf._end.y;
+    }
+    glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2), 
+        sumFaceY / (polygonFaces.size() / 2));
+    gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
+    gParticleComputeUpdater.AddEmitter(gpParticleEmitterPoint, 500);
+    //gpParticleEmitterPoint->SetTransform(gRegionTransformMatrix);
 
-    // stick the emitter bar on the left side of the circle, have it emit right, and make the 
-    // particles slow compared to the point emitter 
-    // Note: Have to use vec4s instead of vec2s because glm::translate(...) only spits out mat4.
-    glm::vec2 barP1 = glm::vec2(-0.2f, +0.1f);
-    glm::vec2 barP2 = glm::vec2(-0.2f, -0.1f);
-    glm::vec2 emitDirection(+1.0f, 0.0f);
-    float minVel = 0.1f;
-    float maxVel = 0.3f;
-    gpParticleEmitterBar = new ParticleEmitterBar(barP1, barP2, emitDirection, minVel, maxVel);
-    gpParticleEmitterBar->SetTransform(gRegionTransformMatrix);
+    //// stick the emitter bar on the left side of the circle, have it emit right, and make the 
+    //// particles slow compared to the point emitter 
+    //// Note: Have to use vec4s instead of vec2s because glm::translate(...) only spits out mat4.
+    //glm::vec2 barP1 = glm::vec2(-0.2f, +0.1f);
+    //glm::vec2 barP2 = glm::vec2(-0.2f, -0.1f);
+    //glm::vec2 emitDirection(+1.0f, 0.0f);
+    //float minVel = 0.1f;
+    //float maxVel = 0.3f;
+    //gpParticleEmitterBar = new ParticleEmitterBar(barP1, barP2, emitDirection, minVel, maxVel);
+    //gpParticleEmitterBar->SetTransform(gRegionTransformMatrix);
 
-    // stick the particle region and emitters into a single "updater" object
-    gParticleStorage.Init(particleProgramId, MAX_PARTICLE_COUNT);
-    //gParticleUpdater.SetRegion(gpParticleRegionCircle);
-    gParticleUpdater.SetRegion(gpParticleRegionPolygon);
-    gParticleUpdater.AddEmitter(gpParticleEmitterBar, 10);
-    gParticleUpdater.AddEmitter(gpParticleEmitterPoint, 10);
-    gParticleUpdater.ResetAllParticles(gParticleStorage._allParticles);
+    //// stick the particle region and emitters into a single "updater" object
+    //gParticleStorage.Init(particleProgramId, MAX_PARTICLE_COUNT);
+    ////gParticleUpdater.SetRegion(gpParticleRegionCircle);
+    //gParticleUpdater.SetRegion(gpParticleRegionPolygon);
+    //gParticleUpdater.AddEmitter(gpParticleEmitterBar, 10);
+    //gParticleUpdater.AddEmitter(gpParticleEmitterPoint, 10);
+    //gParticleUpdater.ResetAllParticles(gParticleStorage._allParticles);
     
     // geometry for particle region borders
-    shaderStorageRef.NewShader("geometry");
-    shaderStorageRef.AddShaderFile("geometry", "geometry.vert", GL_VERTEX_SHADER);
-    shaderStorageRef.AddShaderFile("geometry", "geometry.frag", GL_FRAGMENT_SHADER);
-    shaderStorageRef.LinkShader("geometry");
-    GLuint geometryProgramId = shaderStorageRef.GetShaderProgram("geometry");
+    std::string renderGeometryShaderKey = "render geometry";
+    shaderStorageRef.NewShader(renderGeometryShaderKey);
+    shaderStorageRef.AddShaderFile(renderGeometryShaderKey, "geometry.vert", GL_VERTEX_SHADER);
+    shaderStorageRef.AddShaderFile(renderGeometryShaderKey, "geometry.frag", GL_FRAGMENT_SHADER);
+    shaderStorageRef.LinkShader(renderGeometryShaderKey);
+    //GLuint geometryProgramId = shaderStorageRef.GetShaderProgram(renderGeometryShaderKey);
 
-    gUnifMatrixTransformLoc = shaderStorageRef.GetUniformLocation("geometry", "translateMatrixWindowSpace");
+    gUnifMatrixTransformLoc = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "translateMatrixWindowSpace");
     
-    GenerateCircle(&gCircleGeometry, circleRadius, true);
-    gCircleGeometry.Init(geometryProgramId);
+    //GenerateCircle(&gCircleGeometry, circleRadius, true);
+    //gCircleGeometry.Init(geometryProgramId);
 
-    GeneratePolygonWireframe(&gPolygonGeometry, polygonCorners, false);
-    gPolygonGeometry.Init(geometryProgramId);
+    //GeneratePolygonWireframe(&gPolygonGeometry, polygonCorners, false);
+    //gPolygonGeometry.Init(geometryProgramId);
 
 
     // the timer will be used for framerate calculations
@@ -233,6 +311,11 @@ void Display()
     // TODO: in rendering shader, if particle is not active (if necessary, turn on the vertex attrib pointers that account for it), then make it black so that it won't show up
 
 
+    //// TODO: apply these in the compute and render uniforms
+    //// the circle starts centered on the origin and the translate matrix will move it
+    //// Note: The 1.0f makes it translatable.
+    //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
+    //gRegionTransformMatrix *= glm::rotate(glm::mat4(), 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 
 
 
@@ -241,23 +324,34 @@ void Display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update all particle locations
-    gParticleUpdater.Update(gParticleStorage._allParticles, 0, 
-        gParticleStorage._allParticles.size(), 0.01f);
+
+    // TODO: ??in the update method, bind both buffer bases to different binding points??
+
+    //??why isn't it drawing anything??
+    gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.01f);
+
+
+
+    //gParticleUpdater.Update(gParticleStorage._allParticles, 0, 
+    //    gParticleStorage._allParticles.size(), 0.01f);
 
     // draw the particles
-    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("particles"));
-    glBindVertexArray(gParticleStorage._vaoId);
-    glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
-    glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
+    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
+    glBindVertexArray(gParticleBuffer.VaoId());
+    //glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
+    //glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
+    //glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
+    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
 
     // draw the particle region borders
-    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("geometry"));
+    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
     //glBindVertexArray(gCircleGeometry._vaoId);
     //glDrawElements(gCircleGeometry._drawStyle, gCircleGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
-    glBindVertexArray(gPolygonGeometry._vaoId);
-    glDrawElements(gPolygonGeometry._drawStyle, gPolygonGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
+    //glBindVertexArray(gPolygonGeometry._vaoId);
+    //glDrawElements(gPolygonGeometry._drawStyle, gPolygonGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
+    glDrawArrays(gPolygonFaceBuffer.DrawStyle(), 0, gPolygonFaceBuffer.NumVertices());
+
 
     // draw the frame rate once per second in the lower left corner
     // Note: The font textures' orgin is their lower left corner, so the "lower left" in screen 
@@ -396,24 +490,29 @@ Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void CleanupAll()
 {
-    // these deletion functions need the buffer ID, but they take a (void *) for the second 
-    // argument in the event that the user has an array of IDs (legacy OpenGL stuff that isn't 
-    // used much anymore, if at all), so pass in the buffer ID's address and tell it to delete 1
-    // Note: The second argument is treated like an array, so if I were to pass in the address 
-    // of a single GLuint and tell it to delete 2, then it will either (1) blow up or 
-    // (2) silently delete something I didn't want.  Both are bad, so treat it nice.
-    // Also Note: If I attempt to delete an ID that has already been deleted, that is ok.  OpenGL
-    // will silently swallow that.
-    glDeleteBuffers(1, &gCircleGeometry._arrayBufferId);
-    glDeleteBuffers(1, &gCircleGeometry._elementBufferId);
-    glDeleteVertexArrays(1, &gCircleGeometry._vaoId);
-    glDeleteBuffers(1, &gPolygonGeometry._arrayBufferId);
-    glDeleteBuffers(1, &gPolygonGeometry._elementBufferId);
-    glDeleteVertexArrays(1, &gPolygonGeometry._vaoId);
+    //// these deletion functions need the buffer ID, but they take a (void *) for the second 
+    //// argument in the event that the user has an array of IDs (legacy OpenGL stuff that isn't 
+    //// used much anymore, if at all), so pass in the buffer ID's address and tell it to delete 1
+    //// Note: The second argument is treated like an array, so if I were to pass in the address 
+    //// of a single GLuint and tell it to delete 2, then it will either (1) blow up or 
+    //// (2) silently delete something I didn't want.  Both are bad, so treat it nice.
+    //// Also Note: If I attempt to delete an ID that has already been deleted, that is ok.  OpenGL
+    //// will silently swallow that.
+    //glDeleteBuffers(1, &gCircleGeometry._arrayBufferId);
+    //glDeleteBuffers(1, &gCircleGeometry._elementBufferId);
+    //glDeleteVertexArrays(1, &gCircleGeometry._vaoId);
+    //glDeleteBuffers(1, &gPolygonGeometry._arrayBufferId);
+    //glDeleteBuffers(1, &gPolygonGeometry._elementBufferId);
+    //glDeleteVertexArrays(1, &gPolygonGeometry._vaoId);
 
-    delete(gpParticleRegionCircle);
+    //delete(gpParticleRegionCircle);
     //delete(gpParticleRegionPolygon);
-    delete(gpParticleEmitterBar);
+
+
+
+
+
+    //delete(gpParticleEmitterBar);
     delete(gpParticleEmitterPoint);
 }
 

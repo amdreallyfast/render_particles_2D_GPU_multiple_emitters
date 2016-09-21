@@ -283,6 +283,17 @@ void ShaderStorage::AddShaderFile(const std::string &programKey, const std::stri
         // inserations, so this notation is ok.
         _shaderBinaries[programKey].push_back(shaderId);
     }
+
+    GLint infoLogLen;
+    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLen);
+    if (infoLogLen > 0)
+    {
+        GLchar *logString = new char[infoLogLen + 1];
+        glGetShaderInfoLog(shaderId, infoLogLen, 0, logString);
+        fprintf(stderr, "Program '%s' info log: \n%s", programKey.c_str(), logString);
+        delete logString;
+    }
+
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -390,28 +401,27 @@ Parameters:
     programKey  The string key that was used for adding shader files and linking the binaries.
     uniformName The string that spells out verbatim a uniform name within the requested shader.
 Returns:
-    A uniform location, or 0 if (1) the requested program doesn't exist or (2) the uniform could 
-    not be found.
+    A uniform location, or -1 if (1) the requested program doesn't exist or (2) the uniform 
+    could not be found.
 Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
-GLuint ShaderStorage::GetUniformLocation(const std::string &programKey,
+GLint ShaderStorage::GetUniformLocation(const std::string &programKey,
     const std::string &uniformName) const
 {
     _PROGRAM_MAP::const_iterator itr = _compiledPrograms.find(programKey);
     if (itr == _compiledPrograms.end())
     {
         fprintf(stderr, "No shader program under the key '%s'\n", programKey.c_str());
-        return 0;
+        return -1;
     }
 
-    GLuint programId = itr->second;
-    GLuint uniformLocation = glGetUniformLocation(programId, uniformName.c_str());
-    if (uniformLocation == 0)
+    GLint programId = itr->second;
+    GLint uniformLocation = glGetUniformLocation(programId, uniformName.c_str());
+    if (uniformLocation < 0)
     {
         fprintf(stderr, "No uniform '%s' in shader program '%s'\n", uniformName.c_str(), 
             programKey.c_str());
-        // already 0, so don't bother explicitly returning 0
     }
     
     return uniformLocation;
@@ -428,24 +438,24 @@ Parameters:
     attributeName   The string that spells out verbatim a uniform name within the requested 
                     shader.
 Returns:
-    An attribute location, or 0 if (1) the requested program doesn't exist or (2) the uniform 
+    An attribute location, or -1 if (1) the requested program doesn't exist or (2) the uniform 
     could not be found.
 Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
-GLuint ShaderStorage::GetAttributeLocation(const std::string &programKey,
+GLint ShaderStorage::GetAttributeLocation(const std::string &programKey,
     const std::string &attributeName) const
 {
     _PROGRAM_MAP::const_iterator itr = _compiledPrograms.find(programKey);
     if (itr == _compiledPrograms.end())
     {
         fprintf(stderr, "No shader program under the key '%s'\n", programKey.c_str());
-        return 0;
+        return -1;
     }
 
-    GLuint programId = itr->second;
-    GLuint attributeLocation = glGetAttribLocation(programId, attributeName.c_str());
-    if (attributeLocation == 0)
+    GLint programId = itr->second;
+    GLint attributeLocation = glGetAttribLocation(programId, attributeName.c_str());
+    if (attributeLocation < 0)
     {
         fprintf(stderr, "No attribute '%s' in shader program '%s'\n", attributeName.c_str(),
             programKey.c_str());

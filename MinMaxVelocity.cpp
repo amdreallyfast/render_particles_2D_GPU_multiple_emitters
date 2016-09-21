@@ -47,7 +47,7 @@ Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void MinMaxVelocity::SetDir(const glm::vec2 &dir)
 {
-    _dir = glm::normalize(dir);
+    _dir = glm::normalize(glm::vec4(dir, 0.0f, 1.0f));
     _useRandomDir = false;
 }
 
@@ -62,7 +62,7 @@ Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void MinMaxVelocity::UseRandomDir()
 {
-    _dir = glm::vec2();
+    _dir = glm::vec4();
     _useRandomDir = true;
 }
 
@@ -78,7 +78,7 @@ Returns:
 Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
-glm::vec2 MinMaxVelocity::GetNew() const
+glm::vec4 MinMaxVelocity::GetNew() const
 {
     //float velocityVariation = ((float)rand() * INVERSE_RAND_MAX) * _velocityDelta;
     float velocityVariation = RandomOnRange0to1() * _velocityDelta;
@@ -91,7 +91,7 @@ glm::vec2 MinMaxVelocity::GetNew() const
         // getting too crazy different from each other.
         float newX = (float)(RandomPosAndNeg() % 100);
         float newY = (float)(RandomPosAndNeg() % 100);
-        glm::vec2 randomVelocityVector = glm::normalize(glm::vec2(newX, newY));
+        glm::vec4 randomVelocityVector = glm::normalize(glm::vec4(newX, newY, 0.0f, 1.0f));
         return (randomVelocityVector * velocityMagnitude);
     }
     else  // read, "don't use random direction"

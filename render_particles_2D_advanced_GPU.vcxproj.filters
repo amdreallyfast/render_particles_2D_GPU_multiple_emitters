@@ -44,6 +44,9 @@
     <ClCompile Include="PolygonFaceSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
+    <ClCompile Include="SsboBase.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGlErrorHandling.h" />
@@ -96,6 +99,9 @@
     </ClInclude>
     <ClInclude Include="PolygonFace.h" />
     <ClInclude Include="PolygonFaceSsbo.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="SsboBase.h">
       <Filter>Buffers</Filter>
     </ClInclude>
   </ItemGroup>

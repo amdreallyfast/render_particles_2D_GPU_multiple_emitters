@@ -33,9 +33,9 @@ public:
         const GLenum shaderType);
     GLuint LinkShader(const std::string &programKey);
     GLuint GetShaderProgram(const std::string &programKey) const;
-    GLuint GetUniformLocation(const std::string &programKey,
+    GLint GetUniformLocation(const std::string &programKey,
         const std::string &uniformName) const;
-    GLuint GetAttributeLocation(const std::string &programKey,
+    GLint GetAttributeLocation(const std::string &programKey,
         const std::string &attributeName) const;
 
 private:

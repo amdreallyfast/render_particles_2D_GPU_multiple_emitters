@@ -8,17 +8,13 @@
 /*-----------------------------------------------------------------------------------------------
 Description:
     Ensures that the object starts object with initialized values.
-
-    Allocates space 
 Parameters: None
 Returns:    None
 Exception:  Safe
 Creator:    John Cox (9-6-2016)
 -----------------------------------------------------------------------------------------------*/
 ParticleSsbo::ParticleSsbo() :
-    _vaoId(0),
-    _bufferId(0),
-    _drawStyle(0)
+    SsboBase()
 {
 }
 
@@ -28,7 +24,6 @@ ParticleSsbo::~ParticleSsbo()
     glDeleteVertexArrays(1, &_vaoId);
     glDeleteBuffers(1, &_bufferId);
 }
-
 
 // TODO: header
 // Note: Creating the shader storage buffer does not require the compute shader's program ID and so the compute shader's key is not necessary.  This method only needs the render shader's key because the vertex attrib arrays are determined here.  
@@ -45,9 +40,6 @@ void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * numParticles, allParticles.data(), 
         GL_STATIC_DRAW);
-    // TODO: ??glBindBufferBase??
-    // don't bother with glBindBufferBase(...) because the compute shader already specifies a 
-    // binding location 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // set up the VAO
@@ -104,22 +96,3 @@ void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);    // render program
 }
-
-// TODO: header
-unsigned int ParticleSsbo::VaoId() const
-{
-    return _vaoId;
-}
-
-// TODO: header
-unsigned int ParticleSsbo::BufferId() const
-{
-    return _bufferId;
-}
-
-// TODO: header
-unsigned int ParticleSsbo::DrawStyle() const
-{
-    return _drawStyle;
-}
-

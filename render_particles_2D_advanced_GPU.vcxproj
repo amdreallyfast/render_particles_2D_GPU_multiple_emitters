@@ -162,6 +162,7 @@
     <ClCompile Include="PrimitiveGeneration.cpp" />
     <ClCompile Include="RandomToast.cpp" />
     <ClCompile Include="ShaderStorage.cpp" />
+    <ClCompile Include="SsboBase.cpp" />
     <ClCompile Include="Stopwatch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +179,7 @@
     <ClInclude Include="FreeTypeAtlas.h" />
     <ClInclude Include="FreeTypeEncapsulated.h" />
     <ClInclude Include="GeometryData.h" />
+    <ClInclude Include="SsboBase.h" />
     <ClInclude Include="IParticleEmitter.h" />
     <ClInclude Include="IParticleRegion.h" />
     <ClInclude Include="MinMaxVelocity.h" />

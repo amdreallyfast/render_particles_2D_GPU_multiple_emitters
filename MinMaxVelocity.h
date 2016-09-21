@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/vec2.hpp"
+#include "glm/vec4.hpp"
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -21,11 +22,11 @@ public:
     void SetDir(const glm::vec2 &dir);
     void UseRandomDir();
 
-    glm::vec2 GetNew() const;
+    glm::vec4 GetNew() const;
 private:
     // why store the max if I'm going to be calculating the delta all the time?
     float _velocityDelta;
     float _min;
     bool _useRandomDir;
-    glm::vec2 _dir;
+    glm::vec4 _dir;
 };

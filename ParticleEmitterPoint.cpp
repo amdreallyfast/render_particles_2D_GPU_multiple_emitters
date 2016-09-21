@@ -14,10 +14,13 @@ Returns:    None
 Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
-ParticleEmitterPoint::ParticleEmitterPoint(const glm::vec2 &emitterPos, const float minVel, const float maxVel)
+ParticleEmitterPoint::ParticleEmitterPoint(const glm::vec2 &emitterPos, const float minVel, 
+    const float maxVel)
 {
-    _originalPosition = emitterPos;
-    _currentPosition = emitterPos;
+    // this demo is in window space, so Z pos is 0, but let it be translatable (4th value is 1)
+    _pos = glm::vec4(emitterPos, 0.0f, 1.0f);
+    //_originalPosition = emitterPos;
+    //_currentPosition = emitterPos;
     _velocityCalculator.SetMinMaxVelocity(minVel, maxVel);
     _velocityCalculator.UseRandomDir();
 }
@@ -43,22 +46,30 @@ void ParticleEmitterPoint::ResetParticle(Particle *resetThis) const
     // - Shrink it to the desired size with a scalar.
     float xOffset = (float)(RandomPosAndNeg() % 100);
     float yOffset = (float)(RandomPosAndNeg() % 100);
-    glm::vec2 offset = 0.05f * RandomOnRange0to1() * glm::normalize(glm::vec2(xOffset, yOffset));
-    resetThis->_position = _currentPosition + offset;
+    glm::vec4 offset = 0.05f * RandomOnRange0to1() * 
+        glm::normalize(glm::vec4(xOffset, yOffset, 0.0f, 1.0f));
+    //resetThis->_position = _currentPosition + offset;
+    resetThis->_position = _pos + offset;
 
     resetThis->_velocity = _velocityCalculator.GetNew();
 }
+//
+///*-----------------------------------------------------------------------------------------------
+//Description:
+//    Applies the transform to the emission point.
+//Parameters:
+//    m       A 4x4 transform matrix.  Because glm transform functions only spit out a 4x4.
+//Returns:    None
+//Exception:  Safe
+//Creator:    John Cox (8-26-2016)
+//-----------------------------------------------------------------------------------------------*/
+//void ParticleEmitterPoint::SetTransform(const glm::mat4 &m)
+//{
+//    _currentPosition = glm::vec2(m * glm::vec4(_originalPosition, 0.0f, 1.0f));
+//}
 
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Applies the transform to the emission point.
-Parameters:
-    m       A 4x4 transform matrix.  Because glm transform functions only spit out a 4x4.
-Returns:    None
-Exception:  Safe
-Creator:    John Cox (8-26-2016)
------------------------------------------------------------------------------------------------*/
-void ParticleEmitterPoint::SetTransform(const glm::mat4 &m)
+// TODO: header
+glm::vec4 ParticleEmitterPoint::GetPos() const
 {
-    _currentPosition = glm::vec2(m * glm::vec4(_originalPosition, 0.0f, 1.0f));
+    return _pos;
 }
