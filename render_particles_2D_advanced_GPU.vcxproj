@@ -168,6 +168,7 @@
   <ItemGroup>
     <None Include="freeType.frag" />
     <None Include="freeType.vert" />
+    <None Include="particlePolygonRegion(nocomment).comp" />
     <None Include="particlePolygonRegion.comp" />
     <None Include="particleRender.frag" />
     <None Include="particleRender.vert" />

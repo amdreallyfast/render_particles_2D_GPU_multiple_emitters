@@ -1,0 +1,109 @@
+#version 440
+
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+    vec4 _pos;
+    vec4 _vel;
+    int _isActive;
+};
+
+struct PolygonFace
+{
+    vec4 _p1;
+    vec4 _p2;
+    vec4 _normal;
+};
+
+uniform uint uParticleCount;
+layout (binding = 0) buffer ParticleBuffer 
+{
+    Particle AllParticles[];
+};
+
+//uniform uint uPolygonFaceCount;
+//layout (binding = 1) buffer FaceBuffer
+//{
+//    PolygonFace PolygonRegionFaces[];
+//};
+
+
+uniform float uDeltaTimeSec;
+
+float RandHash(vec4 co)
+{
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+//bool ParticleOutOfBoundsPolygon(Particle p)
+//{
+//    for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
+//    {
+//        PolygonFace f = PolygonRegionFaces[faceIndex];
+//
+//        vec4 faceToParticle = p._pos - f._p1;
+//        if (dot(faceToParticle, f._normal) < 0)
+//        {
+//            return true;
+//        }
+//    }
+//
+//    return false;
+//}
+
+
+uniform vec4 uPointEmitterCenter;
+Particle PointEmitterResetPos(Particle p)
+{
+    //vec4 seed1 = vec4(p._pos.x + 1.0, p._pos.y, 0.0, 0.0);
+    //vec4 seed2 = vec4(p._pos.x, p._pos.y + 1.0, 0.0, 0.0);
+    //vec4 seed3 = vec4(p._vel.x, p._vel.y, 0.0, 0.0);
+    //float velX = RandHash(seed1);
+    //float velY = RandHash(seed2);
+    //
+    //float variance = 0.05 * RandHash(seed3);
+    //
+    //Particle pCopy = p;
+    //pCopy._pos = uPointEmitterCenter;
+    //pCopy._vel = variance * normalize(vec4(velX, velY, 0.0, 0.0));
+
+    Particle pCopy = p;
+    pCopy._pos = vec4(-0.5f, -0.5f, 0.0f, 1.0f);
+    pCopy._vel = vec4(+0.5f, +0.5f, 0.0f, 1.0f);
+    return pCopy;
+}
+
+
+uniform vec4 uBarP1;
+uniform vec4 uBarP2;
+Particle BarEmitterReset(Particle p)
+{
+    return p;
+}
+
+uniform mat4 _windowSpaceRegionTransform;
+uniform mat4 _windowSpaceEmitterTransform;
+
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+    if (index < uParticleCount)
+    {
+        Particle p = AllParticles[index];
+
+        vec4 deltaPosition = p._vel * uDeltaTimeSec;
+        p._pos = p._pos + deltaPosition;
+        //p._pos = p._pos + 0.01f;
+
+        //// if it went out of bounds, reset it
+        //if (ParticleOutOfBoundsPolygon(p))
+        //{
+        //    p = PointEmitterResetPos(p);
+        //}
+
+        AllParticles[index] = p;
+    }
+}
+

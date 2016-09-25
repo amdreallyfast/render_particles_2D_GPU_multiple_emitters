@@ -131,6 +131,9 @@
     <None Include="particlePolygonRegion.comp">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="particlePolygonRegion(nocomment).comp">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Particles">

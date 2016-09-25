@@ -26,7 +26,7 @@ class ParticlePolygonComputeUpdater
 public:
     ParticlePolygonComputeUpdater();
     
-    void Init(const std::string &computeShaderKey);
+    void Init(unsigned int numParticles, const std::string &computeShaderKey);
     bool AddEmitter(const IParticleEmitter *pEmitter, const int maxParticlesEmittedPerFrame);
 
     void Update(unsigned int numParticles, const float deltaTimeSec) const;
@@ -49,11 +49,15 @@ private:
     unsigned int _computeProgramId;
 
     // uniform locations are GLint
+    int _unifLocParticleCount;
     int _unifLocPolygonFaceCount;
     int _unifLocDeltaTimeSec;
-    int _unifLocRadiusSqr;
-    int _unifLocParticleRegionCircleCenter;
     int _unifLocPointEmitterCenter;
+    int _unifLocBarP1;
+    int _unifLocBarP2;
+    int _unifLocWindowSpaceRegionTransform;
+    int _unifLocWindowSpaceEmitterTransform;
+
 
     // all the updating heavy lifting goes on in the compute shader, so CPU cache coherency is not a concern for emitter storage on the CPU side and a std::vector<...> is acceptable
     // Note: The compute shader has no concept of inheritance.  Rather than store a single collection of IParticleEmitter pointers and cast them to either point or bar emitters on every update, just store them separately.

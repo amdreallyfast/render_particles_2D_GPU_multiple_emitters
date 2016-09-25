@@ -9,7 +9,7 @@
 
 /*-----------------------------------------------------------------------------------------------
 Description:
-    Ensures that the object starts object with initialized values.
+    Looks up all uniforms in the compute shader that checks particles against a polygon region.  Uses the "num particles" and "num faces" arguments to tell the compute shader how many will be in each particle buffer and polygon face buffer, respectively.
 
     ??does anything??
 Parameters: None
@@ -17,51 +17,62 @@ Returns:    None
 Exception:  Safe
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater() //:
+ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey) //:
     //_pRegion(0)
-{
-    //for (size_t emitterIndex = 0; emitterIndex < MAX_EMITTERS; emitterIndex++)
-    //{
-    //    _pEmitters[emitterIndex] = 0;
-    //    _maxParticlesEmittedPerFrame[emitterIndex] = 0;
-    //}
-    //_emitterCount = 0;
-}
-
-// TODO: header
-// computeShaderKey: used to access the shader program in the shader storage object
-// particles: the collection of Particle data that is to be uploaded to the GPU
-void ParticlePolygonComputeUpdater::Init(const std::string &computeShaderKey)
 {
     ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
     _computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
 
-    _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
-    _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
-    _unifLocRadiusSqr = shaderStorageRef.GetUniformLocation(computeShaderKey, "uRadiusSqr");
-    _unifLocParticleRegionCircleCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleRegionCircleCenter");
+    // these are constant through the program
+    _unifLocParticleCount = 
+        shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleCount");
+    _unifLocPolygonFaceCount = 
+        shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
+
+    glUseProgram(_computeProgramId);
+    glUniform1ui(_unifLocParticleCount, numParticles);
+    glUniform1ui(_unifLocPolygonFaceCount, numFaces);
+    glUseProgram(0);
+
+    // these are also constant through the program, but won't get set until the emitters are 
+    // added
     _unifLocPointEmitterCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPointEmitterCenter");
-
-    // TODO: find uniforms and store them in this class
-    //uniform uint uParticleCount;
-    //uniform uint uPolygonFaceCount;
-    //uniform float uDeltaTimeSec;
-    // uniform float uRadiusSqr;
-    // uniform vec4 uParticleRegionCircleCenter;
+    _unifLocBarP1 = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarEmitterP1");
+    _unifLocBarP2 = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarEmitterP2");
 
 
+    // these are updated during Update(...)
+    _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
+    _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceRegionTransform");
+    _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceEmitterTransform");
 
-
-    // TODO: query work group counts and size (??move to display code??)
-
-
-    // TODO:
-    // - ParticleStorageGpu.h/cpp -> ParticlePolygonSsbo.h/cpp (need to represent each compute shader's SSBO)
-    // - particleMain.comp -> PaticlePolygon.comp
-    // - ParticlePolygonComputeUpdater -> ParticlePolygonComputeUpdater.h/cpp (each compute shader will have its own set of uniforms)
-
-    // generate the storage 
 }
+//
+//// TODO: header
+//// computeShaderKey: used to access the shader program in the shader storage object
+//// particles: the collection of Particle data that is to be uploaded to the GPU
+//void ParticlePolygonComputeUpdater::Init(unsigned int numParticles, const std::string &computeShaderKey)
+//{
+//    ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
+//    _computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
+//
+//    _unifLocParticleCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleCount");
+//    
+//    _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
+//    _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
+//    _unifLocPointEmitterCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPointEmitterCenter");
+//    _unifLocBarP1 = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarP1");
+//    _unifLocBarP2 = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarP2");
+//    _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceRegionTransform");
+//    _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceEmitterTransform");
+//
+//    glUseProgram(_computeProgramId);
+//    glUniform1ui(_unifLocParticleCount, numParticles);
+//    glUseProgram(0);
+//
+//
+//    // TODO: query work group counts and size (??move to display code??)
+//}
 //
 ///*-----------------------------------------------------------------------------------------------
 //Description:
@@ -169,7 +180,8 @@ void ParticlePolygonComputeUpdater::Update(unsigned int numParticles,
     // (2) Vertex data sourced from buffer objects after the barrier will reflect data written 
     // by shaders prior to the barrier.  The affected buffer(s) is determined by the buffers 
     // that were bound for the vertex attributes.  In this case, that means GL_ARRAY_BUFFER.
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
     // cleanup
     glUseProgram(0);

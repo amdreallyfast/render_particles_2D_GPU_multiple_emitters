@@ -188,13 +188,21 @@ void Init()
     shaderStorageRef.NewShader(computeShaderKey);
     //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleStructure.comp");
     //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleMain.comp");
-    shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
+    
+    
+    
+    
+    //shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
+    shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion(nocomment).comp", GL_COMPUTE_SHADER);
+    
+    
+    
     //shaderStorageRef.CompileComputeShader("particleCompute");
     //shaderStorageRef.LinkComputeShader("particleCompute");
     shaderStorageRef.LinkShader(computeShaderKey);
     //GLuint computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
     //InitComputeShader(computeProgramId);
-    gParticleComputeUpdater.Init(computeShaderKey);
+    gParticleComputeUpdater.Init(MAX_PARTICLE_COUNT, computeShaderKey);
 
 
     
@@ -282,7 +290,14 @@ void Init()
     // polygon particle region
     std::vector<PolygonFace> polygonFaces;
     GeneratePolygonRegion(&polygonFaces);
-    gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+    
+    
+    // TODO: re-enable
+    //gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+
+
+
+
 
     gUnifMatrixTransformLoc = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "translateMatrixWindowSpace");
 
@@ -380,12 +395,10 @@ void Display()
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
     //glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
-    glBindVertexArray(gPolygonFaceBuffer.VaoId());
-    //glBindVertexArray(gCircleGeometry._vaoId);
-    //glDrawElements(gCircleGeometry._drawStyle, gCircleGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
-    //glBindVertexArray(gPolygonGeometry._vaoId);
-    //glDrawElements(gPolygonGeometry._drawStyle, gPolygonGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
-    glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
+
+    //TODO: re-enable
+    //glBindVertexArray(gPolygonFaceBuffer.VaoId());
+    //glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
 
 
     // draw the frame rate once per second in the lower left corner

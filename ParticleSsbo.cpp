@@ -60,6 +60,10 @@ void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * numParticles, allParticles.data(), 
         GL_STATIC_DRAW);
+
+    // http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, _bufferId);
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // set up the VAO
