@@ -17,6 +17,8 @@ struct MyVertex
 
     }
 
+    // even though this is a 2D program, vec4s were chosen because it is easier than trying to 
+    // match GLSL's 16-bytes-per-variable with arrays of dummy floats
     glm::vec4 _position;
     glm::vec4 _normal;
 };

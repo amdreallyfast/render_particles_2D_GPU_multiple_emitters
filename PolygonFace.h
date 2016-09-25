@@ -1,7 +1,6 @@
 #pragma once
 
-#include "glm/vec2.hpp"
-#include "glm/vec4.hpp"
+#include "MyVertex.h"
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -11,17 +10,22 @@ Creator:    John Cox (9-8-2016)
 -----------------------------------------------------------------------------------------------*/
 struct PolygonFace
 {
-    // TODO: header
-    PolygonFace(const glm::vec2 &start, const glm::vec2 &end, const glm::vec2 normal) :
-        _start(glm::vec4(start, 0.0f, 1.0f)),
-        _end(glm::vec4(end, 0.0f, 1.0f)),
-        _normal(glm::vec4(normal, 0.0f, 1.0f))
+    /*-------------------------------------------------------------------------------------------
+    Description:
+        Gives members initial values to describe the face of a 2D polygon face.  Without the 
+        normals, this would just be a 2D line, but with surface normals the line is technically 
+        considered a face.
+    Parameters: 
+        start   Self-eplanatory.
+    Returns:    None
+    Creator: John Cox, 9-25-2016
+    -------------------------------------------------------------------------------------------*/
+    PolygonFace(const MyVertex &start, const MyVertex &end) :
+        _start(start),
+        _end(end)
     {
     }
 
-    // even though this is a 2D program, vec4s were chosen because it is easier than trying to 
-    // match GLSL's 16-bytes-per-variable with arrays of dummy floats
-    glm::vec4 _start;
-    glm::vec4 _end;
-    glm::vec4 _normal;
+    MyVertex _start;
+    MyVertex _end;
 };

@@ -104,6 +104,7 @@
     <ClInclude Include="SsboBase.h">
       <Filter>Buffers</Filter>
     </ClInclude>
+    <ClInclude Include="MyVertex.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="geometry.frag">

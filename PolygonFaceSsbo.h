@@ -4,7 +4,12 @@
 #include "PolygonFace.h"
 #include <vector>
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Sets up the Shader Storage Block Object for a 2D polygon.  The polygon will be used in both 
+    the compute shader and in the geometry render shader.
+Creator: John Cox, 9-8-2016
+-----------------------------------------------------------------------------------------------*/
 class PolygonFaceSsbo : public SsboBase
 {
 public:
