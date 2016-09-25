@@ -12,7 +12,7 @@ public:
     unsigned int VaoId() const;
     unsigned int BufferId() const;
     unsigned int DrawStyle() const;
-    unsigned int NumVertices() const;
+    unsigned int NumItems() const;
 
 protected:
     // can't be private because the derived classes need to set them
@@ -21,10 +21,19 @@ protected:
     // of using the OpenGL typedefs
     // Note: IDs are GLuint (unsigned int), draw style is GLenum (unsigned int), GLushort is 
     // unsigned short.
+    
+    // vertex array buffer
     unsigned int _vaoId;
+
+    // shader storage buffer object
     unsigned int _bufferId;
-    unsigned int _drawStyle;    // GL_TRIANGLES, GL_LINES, etc.
-    unsigned int _numVertices;  // used in the glDraw*(...) call
+
+    // GL_TRIANGLES, GL_LINES, etc.
+    unsigned int _drawStyle;
+
+    // number of points, lines, triangles, etc.
+    // Note: Is a complement draw style.
+    unsigned int _numItems;
 
     //??binding point index? http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/ ??
 };

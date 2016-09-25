@@ -13,3 +13,4 @@ public:
 
     void Init(const std::vector<PolygonFace> &faceCollection, unsigned int renderProgramId);
 };
+

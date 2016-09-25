@@ -31,6 +31,7 @@ ParticleSsbo::~ParticleSsbo()
 void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
 {
     _drawStyle = GL_POINTS;
+    _numItems = numParticles;
 
     std::vector<Particle> allParticles(numParticles);
 

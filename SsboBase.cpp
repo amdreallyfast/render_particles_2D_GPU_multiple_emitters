@@ -8,7 +8,7 @@ SsboBase::SsboBase() :
     _vaoId(0),
     _bufferId(0),
     _drawStyle(0),
-    _numVertices(0)
+    _numItems(0)
 {
 
 }
@@ -42,8 +42,8 @@ unsigned int SsboBase::DrawStyle() const
 }
 
 // TODO: header
-unsigned int SsboBase::NumVertices() const
+unsigned int SsboBase::NumItems() const
 {
-    return _numVertices;
+    return _numItems;
 }
 

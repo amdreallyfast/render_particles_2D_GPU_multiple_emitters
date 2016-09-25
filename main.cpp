@@ -218,10 +218,10 @@ void Init()
     //gpParticleRegionCircle = new ParticleRegionCircle(circleCenter, circleRadius);
     //gpParticleRegionCircle->SetTransform(gRegionTransformMatrix);
 
-    // polygon particle region
-    std::vector<PolygonFace> polygonFaces;
-    GeneratePolygonRegion(&polygonFaces);
-    gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+    //// polygon particle region
+    //std::vector<PolygonFace> polygonFaces;
+    //GeneratePolygonRegion(&polygonFaces);
+    //gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
 /*
     polygonCorners.push_back(glm::vec2(-0.25f, -0.5f));
     polygonCorners.push_back(glm::vec2(+0.25f, -0.5f));
@@ -232,20 +232,20 @@ void Init()
     gpParticleRegionPolygon->SetTransform(gRegionTransformMatrix);*/
 
 
-    // stick the point emitter in the geometric center of the polygon region
-    // Note: Repeat points do exist, but the average will sort that out.
-    float sumFaceX = 0.0f;
-    float sumFaceY = 0.0f;
-    for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
-    {
-        const PolygonFace &pf = polygonFaces[faceIndex];
-        sumFaceX += pf._start.x + pf._end.x;
-        sumFaceY += pf._start.y + pf._end.y;
-    }
-    glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2), 
-        sumFaceY / (polygonFaces.size() / 2));
-    gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
-    gParticleComputeUpdater.AddEmitter(gpParticleEmitterPoint, 500);
+    //// stick the point emitter in the geometric center of the polygon region
+    //// Note: Repeat points do exist, but the average will sort that out.
+    //float sumFaceX = 0.0f;
+    //float sumFaceY = 0.0f;
+    //for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
+    //{
+    //    const PolygonFace &pf = polygonFaces[faceIndex];
+    //    sumFaceX += pf._start.x + pf._end.x;
+    //    sumFaceY += pf._start.y + pf._end.y;
+    //}
+    //glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2), 
+    //    sumFaceY / (polygonFaces.size() / 2));
+    //gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
+    //gParticleComputeUpdater.AddEmitter(gpParticleEmitterPoint, 500);
     //gpParticleEmitterPoint->SetTransform(gRegionTransformMatrix);
 
     //// stick the emitter bar on the left side of the circle, have it emit right, and make the 
@@ -275,7 +275,31 @@ void Init()
     shaderStorageRef.LinkShader(renderGeometryShaderKey);
     //GLuint geometryProgramId = shaderStorageRef.GetShaderProgram(renderGeometryShaderKey);
 
+    // polygon particle region
+    std::vector<PolygonFace> polygonFaces;
+    GeneratePolygonRegion(&polygonFaces);
+    gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+
     gUnifMatrixTransformLoc = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "translateMatrixWindowSpace");
+
+    // stick the point emitter in the geometric center of the polygon region
+    // Note: Repeat points do exist, but the average will sort that out.
+    float sumFaceX = 0.0f;
+    float sumFaceY = 0.0f;
+    for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
+    {
+        const PolygonFace &pf = polygonFaces[faceIndex];
+        sumFaceX += pf._start.x + pf._end.x;
+        sumFaceY += pf._start.y + pf._end.y;
+    }
+    glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2),
+        sumFaceY / (polygonFaces.size() / 2));
+    gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
+    gParticleComputeUpdater.AddEmitter(gpParticleEmitterPoint, 500);
+
+
+
+
     
     //GenerateCircle(&gCircleGeometry, circleRadius, true);
     //gCircleGeometry.Init(geometryProgramId);
@@ -327,8 +351,8 @@ void Display()
 
 
 
-    ////??why isn't it drawing anything??
-    //gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.01f);
+    //??why isn't it drawing anything??
+    gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.05f);
 
 
 
@@ -341,7 +365,7 @@ void Display()
     //glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
     //glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
     //glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
-    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
+    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumItems());
 
 
 
@@ -357,7 +381,7 @@ void Display()
     //glDrawElements(gCircleGeometry._drawStyle, gCircleGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
     //glBindVertexArray(gPolygonGeometry._vaoId);
     //glDrawElements(gPolygonGeometry._drawStyle, gPolygonGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
-    glDrawArrays(gPolygonFaceBuffer.DrawStyle(), 0, gPolygonFaceBuffer.NumVertices());
+    glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumItems());
 
 
     // draw the frame rate once per second in the lower left corner
