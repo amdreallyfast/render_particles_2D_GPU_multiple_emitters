@@ -1,6 +1,11 @@
 #pragma once
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Defines the constructor, which gives the members zero values, and the destructor, which 
+    deletes any allocated buffers.  
+Creator: John Cox, 9-20-2016
+-----------------------------------------------------------------------------------------------*/
 class SsboBase
 {
 public:
@@ -12,7 +17,7 @@ public:
     unsigned int VaoId() const;
     unsigned int BufferId() const;
     unsigned int DrawStyle() const;
-    unsigned int NumItems() const;
+    unsigned int NumVertices() const;
 
 protected:
     // can't be private because the derived classes need to set them
@@ -22,18 +27,10 @@ protected:
     // Note: IDs are GLuint (unsigned int), draw style is GLenum (unsigned int), GLushort is 
     // unsigned short.
     
-    // vertex array buffer
     unsigned int _vaoId;
-
-    // shader storage buffer object
     unsigned int _bufferId;
-
-    // GL_TRIANGLES, GL_LINES, etc.
-    unsigned int _drawStyle;
-
-    // number of points, lines, triangles, etc.
-    // Note: Is a complement draw style.
-    unsigned int _numItems;
+    unsigned int _drawStyle;    // GL_TRIANGLES, GL_LINES, etc.
+    unsigned int _numVertices;
 
     //??binding point index? http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/ ??
 };

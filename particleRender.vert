@@ -10,6 +10,8 @@ layout (location = 1) in vec2 vel;
 // must have the same name as its corresponding "in" item in the frag shader
 smooth out vec3 particleColor;
 
+// TODO: render inactive particles as black
+
 void main()
 {
     // hard code a white particle color

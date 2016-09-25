@@ -158,7 +158,7 @@
     <ClCompile Include="ParticleRegionCircle.cpp" />
     <ClCompile Include="ParticleSsbo.cpp" />
     <ClCompile Include="ParticlePolygonComputeUpdater.cpp" />
-    <ClCompile Include="PolygonFaceSsbo.cpp" />
+    <ClCompile Include="PolygonSsbo.cpp" />
     <ClCompile Include="PrimitiveGeneration.cpp" />
     <ClCompile Include="RandomToast.cpp" />
     <ClCompile Include="ShaderStorage.cpp" />
@@ -180,6 +180,7 @@
     <ClInclude Include="FreeTypeEncapsulated.h" />
     <ClInclude Include="GeometryData.h" />
     <ClInclude Include="MyVertex.h" />
+    <ClInclude Include="PolygonSsbo.h" />
     <ClInclude Include="SsboBase.h" />
     <ClInclude Include="IParticleEmitter.h" />
     <ClInclude Include="IParticleRegion.h" />
@@ -193,7 +194,6 @@
     <ClInclude Include="ParticleSsbo.h" />
     <ClInclude Include="ParticlePolygonComputeUpdater.h" />
     <ClInclude Include="PolygonFace.h" />
-    <ClInclude Include="PolygonFaceSsbo.h" />
     <ClInclude Include="PrimitiveGeneration.h" />
     <ClInclude Include="RandomToast.h" />
     <ClInclude Include="ShaderStorage.h" />

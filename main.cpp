@@ -54,7 +54,7 @@
 //#include "ParticleStorage.h"
 //#include "ParticleUpdater.h"
 #include "ParticleSsbo.h"
-#include "PolygonFaceSsbo.h"
+#include "PolygonSsbo.h"
 #include "ParticlePolygonComputeUpdater.h"
 
 // for moving the shapes around in window space
@@ -80,7 +80,7 @@ GLint gUnifMatrixTransformLoc;
 
 // ??stored in scene??
 ParticleSsbo gParticleBuffer;
-PolygonFaceSsbo gPolygonFaceBuffer;
+PolygonSsbo gPolygonFaceBuffer;
 
 // in a bigger program, this would somehow be encapsulated and associated with both the circle
 // geometry and the circle particle region, and ditto for the polygon
@@ -130,10 +130,14 @@ static void GeneratePolygonRegion(std::vector<PolygonFace> *polygonFaceCollectio
     glm::vec2 p2(+0.25f, -0.5f);
     glm::vec2 p3(+0.5f, +0.25f);
     glm::vec2 p4(-0.5f, +0.25f);
-    PolygonFace face1(p1, p2, RotateNeg90(p2 - p1));
-    PolygonFace face2(p2, p3, RotateNeg90(p3 - p2));
-    PolygonFace face3(p3, p4, RotateNeg90(p4 - p3));
-    PolygonFace face4(p4, p1, RotateNeg90(p1 - p4));
+    glm::vec2 n1(RotateNeg90(p2 - p1));
+    glm::vec2 n2(RotateNeg90(p3 - p2));
+    glm::vec2 n3(RotateNeg90(p4 - p3));
+    glm::vec2 n4(RotateNeg90(p1 - p4));
+    PolygonFace face1(MyVertex(p1, n1), MyVertex(p2, n1));
+    PolygonFace face2(MyVertex(p2, n2), MyVertex(p3, n2));
+    PolygonFace face3(MyVertex(p3, n3), MyVertex(p4, n3));
+    PolygonFace face4(MyVertex(p4, n4), MyVertex(p1, n4));
 
     polygonFaceCollection->push_back(face1);
     polygonFaceCollection->push_back(face2);
@@ -289,8 +293,8 @@ void Init()
     for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
     {
         const PolygonFace &pf = polygonFaces[faceIndex];
-        sumFaceX += pf._start.x + pf._end.x;
-        sumFaceY += pf._start.y + pf._end.y;
+        sumFaceX += pf._start._position.x + pf._end._position.x;
+        sumFaceY += pf._start._position.y + pf._end._position.y;
     }
     glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2),
         sumFaceY / (polygonFaces.size() / 2));
@@ -365,7 +369,7 @@ void Display()
     //glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
     //glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
     //glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
-    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumItems());
+    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
 
 
 
@@ -381,7 +385,7 @@ void Display()
     //glDrawElements(gCircleGeometry._drawStyle, gCircleGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
     //glBindVertexArray(gPolygonGeometry._vaoId);
     //glDrawElements(gPolygonGeometry._drawStyle, gPolygonGeometry._indices.size(), GL_UNSIGNED_SHORT, 0);
-    glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumItems());
+    glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
 
 
     // draw the frame rate once per second in the lower left corner

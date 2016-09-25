@@ -41,10 +41,10 @@
     <ClCompile Include="ParticleSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="PolygonFaceSsbo.cpp">
+    <ClCompile Include="SsboBase.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="SsboBase.cpp">
+    <ClCompile Include="PolygonSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -98,13 +98,13 @@
       <Filter>Buffers</Filter>
     </ClInclude>
     <ClInclude Include="PolygonFace.h" />
-    <ClInclude Include="PolygonFaceSsbo.h">
-      <Filter>Buffers</Filter>
-    </ClInclude>
     <ClInclude Include="SsboBase.h">
       <Filter>Buffers</Filter>
     </ClInclude>
     <ClInclude Include="MyVertex.h" />
+    <ClInclude Include="PolygonSsbo.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="geometry.frag">

@@ -10,28 +10,47 @@ Description:
     Ensures that the object starts object with initialized values.
 Parameters: None
 Returns:    None
-Exception:  Safe
-Creator:    John Cox (9-6-2016)
+Creator: John Cox, 9-6-2016
 -----------------------------------------------------------------------------------------------*/
 ParticleSsbo::ParticleSsbo() :
     SsboBase()
 {
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Does nothing.  Exists to be declared virtual so that the base class' destructor is called
+    upon object death.
+Parameters: None
+Returns:    None
+Creator: John Cox, 9-6-2016
+-----------------------------------------------------------------------------------------------*/
 ParticleSsbo::~ParticleSsbo()
 {
-    glDeleteVertexArrays(1, &_vaoId);
-    glDeleteBuffers(1, &_bufferId);
 }
 
-// TODO: header
-// Note: Creating the shader storage buffer does not require the compute shader's program ID and so the compute shader's key is not necessary.  This method only needs the render shader's key because the vertex attrib arrays are determined here.  
-// Note: Particles are loaded onto the GPU in this function in their "zero" state, which means that their position and velocity default to 0s and their "is active" flag defaults to false.  It is ok that they are not initialized with any emitters because, as the compute shader runs, it will reset any inactive particles that it comes across, and the particle rendering shader will render inactive particles as black.  This will still look ok.
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Given a desired number of polygons, generates a collection of that many particles with 
+    default values, allocates an SSBO for them, dumps the data into them, and sets up the 
+    vertex attribtues for the render shader.
+
+    Note: The compute shader ID is not necessary to set up the SSBO.
+    Also Note: Particles are loaded onto the GPU in this function in their "zero" state, which 
+    means that their position and velocity default to 0s and their "is active" flag defaults to 
+    false.  It is ok that they are not initialized with any emitters because, as the compute 
+    shader runs, it will reset any inactive particles that it comes across, and the particle 
+    rendering shader will render inactive particles as black.  This will still look ok.
+Parameters: 
+    numParticles    Determines the size of the SSBO.
+    renderProgramId The rendering shader that will be drawing this polygon.
+Returns:    None
+Creator: John Cox, 9-6-2016
+-----------------------------------------------------------------------------------------------*/
 void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
 {
     _drawStyle = GL_POINTS;
-    _numItems = numParticles;
+    _numVertices = numParticles;
 
     std::vector<Particle> allParticles(numParticles);
 

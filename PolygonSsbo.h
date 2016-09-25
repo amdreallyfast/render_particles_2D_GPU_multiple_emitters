@@ -10,11 +10,11 @@ Description:
     the compute shader and in the geometry render shader.
 Creator: John Cox, 9-8-2016
 -----------------------------------------------------------------------------------------------*/
-class PolygonFaceSsbo : public SsboBase
+class PolygonSsbo : public SsboBase
 {
 public:
-    PolygonFaceSsbo();
-    virtual ~PolygonFaceSsbo();
+    PolygonSsbo();
+    virtual ~PolygonSsbo();
 
     void Init(const std::vector<PolygonFace> &faceCollection, unsigned int renderProgramId);
 };

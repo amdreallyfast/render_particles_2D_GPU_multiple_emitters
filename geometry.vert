@@ -13,6 +13,7 @@ void main()
     
     
     //gl_Position = translateMatrixWindowSpace * vec4(pos, -1.0f, 1.0f);
-    gl_Position = vec4(pos, -1.0f, 1.0f);
+    //gl_Position = vec4(pos, -1.0f, 1.0f);
+    gl_Position = pos;
 }
 

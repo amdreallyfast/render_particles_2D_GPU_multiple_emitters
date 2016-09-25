@@ -1,3 +1,10 @@
+
+
+// TODO: make separate compute shader with notes, then leave the one in use with no comments so that it looks lean (ALTERNATE: split the compute shader into multiple parts and add the files one by one)
+
+
+
+
 /************************************************************************************************
 ------------------------------------------------------------------------------------------------
 On the use of vec4:
