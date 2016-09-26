@@ -73,7 +73,11 @@ void PolygonSsbo::Init(const std::vector<PolygonFace> &faceCollection, unsigned 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PolygonFace) * faceCollection.size(), faceCollection.data(), GL_STATIC_DRAW);
     //glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vertexArr), vertexArr, GL_STATIC_DRAW);
-    //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _bufferId);
+    
+    // match the layout binding of the compute shader
+    // Note: See this link.  Search for "Binding an SSBO".
+    // http://malideveloper.arm.com/resources/sample-code/introduction-compute-shaders-2/
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, _bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // the render program is required for vertex attribute initialization or else the program WILL crash at runtime

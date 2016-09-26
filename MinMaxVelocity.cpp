@@ -9,7 +9,6 @@ Description:
     Ensures that the object starts object with initialized values.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 MinMaxVelocity::MinMaxVelocity() :
@@ -26,7 +25,6 @@ Parameters:
     min     The minimum velocity in window space (XY on range [-1,+1].
     max     The maximum velocity in window space.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void MinMaxVelocity::SetMinMaxVelocity(const float min, const float max)
@@ -42,7 +40,6 @@ Description:
 Parameters:
     dir     Self-explanatory.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void MinMaxVelocity::SetDir(const glm::vec2 &dir)
@@ -57,7 +54,6 @@ Description:
     the provided direction.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void MinMaxVelocity::UseRandomDir()
@@ -75,7 +71,6 @@ Parameters: None
 Returns:    
     A 2D vector whose magnitude is between the initialized "min" and "max" values and whose 
     direction is random.
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 glm::vec4 MinMaxVelocity::GetNew() const

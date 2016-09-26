@@ -10,7 +10,6 @@ Description:
     -1.  Just initialize them to 0 and be sure to not use one without being initialized.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (6-12-2016)
 -----------------------------------------------------------------------------------------------*/
 GeometryData::GeometryData() :
@@ -28,7 +27,6 @@ Parameters:
     programId   Program binding is required for vertex attributes.
     initThis    Self-explanatory.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (6-12-2016)
 -----------------------------------------------------------------------------------------------*/
 void GeometryData::Init(unsigned int programId)

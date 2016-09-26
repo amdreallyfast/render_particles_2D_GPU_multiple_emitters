@@ -92,7 +92,7 @@ glm::mat4 gRegionTransformMatrix;
 IParticleEmitter *gpParticleEmitterPoint;
 //IParticleEmitter *gpParticleEmitterBar;
 //ParticleUpdater gParticleUpdater;
-ParticlePolygonComputeUpdater gParticleComputeUpdater;
+ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
 
 // divide between the circle and the polygon regions
 // Note: 
@@ -110,7 +110,6 @@ Parameters:
     v   A const 2D vector.
 Returns:
     A 2D vector rotated -90 degrees from the provided one.
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 static glm::vec2 RotateNeg90(const glm::vec2 &v)
@@ -156,7 +155,6 @@ Parameters:
     argv    (From main(...)) A collection of argument strings.  For glut's initialization.
 Returns:
     False if something went wrong during initialization, otherwise true;
-Exception:  Safe
 Creator:    John Cox (3-7-2016)
 -----------------------------------------------------------------------------------------------*/
 void Init()
@@ -202,7 +200,7 @@ void Init()
     shaderStorageRef.LinkShader(computeShaderKey);
     //GLuint computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
     //InitComputeShader(computeProgramId);
-    gParticleComputeUpdater.Init(MAX_PARTICLE_COUNT, computeShaderKey);
+    //gParticleComputeUpdater.Init(MAX_PARTICLE_COUNT, computeShaderKey);
 
 
     
@@ -217,7 +215,7 @@ void Init()
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.frag", GL_FRAGMENT_SHADER);
     shaderStorageRef.LinkShader(renderParticlesShaderKey);
 
-    gParticleBuffer.Init(MAX_PARTICLE_COUNT, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+    //gParticleBuffer.Init(MAX_PARTICLE_COUNT, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
 
     //// the circle starts centered on the origin and the translate matrix will move it
     //// Note: The 1.0f makes it translatable.
@@ -301,24 +299,32 @@ void Init()
 
     gUnifMatrixTransformLoc = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "translateMatrixWindowSpace");
 
-    // stick the point emitter in the geometric center of the polygon region
-    // Note: Repeat points do exist, but the average will sort that out.
-    float sumFaceX = 0.0f;
-    float sumFaceY = 0.0f;
-    for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
-    {
-        const PolygonFace &pf = polygonFaces[faceIndex];
-        sumFaceX += pf._start._position.x + pf._end._position.x;
-        sumFaceY += pf._start._position.y + pf._end._position.y;
-    }
-    glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2),
-        sumFaceY / (polygonFaces.size() / 2));
-    gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
-    gParticleComputeUpdater.AddEmitter(gpParticleEmitterPoint, 500);
+    //// stick the point emitter in the geometric center of the polygon region
+    //// Note: Repeat points do exist, but the average will sort that out.
+    //float sumFaceX = 0.0f;
+    //float sumFaceY = 0.0f;
+    //for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
+    //{
+    //    const PolygonFace &pf = polygonFaces[faceIndex];
+    //    sumFaceX += pf._start._position.x + pf._end._position.x;
+    //    sumFaceY += pf._start._position.y + pf._end._position.y;
+    //}
+    //glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2),
+    //    sumFaceY / (polygonFaces.size() / 2));
+    ////gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
+    
+    gpParticleEmitterPoint = new ParticleEmitterPoint(glm::vec2(), 0.3f, 0.5f);
+    gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint, 500);
+
+    std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
+    gpParticleComputeUpdater->InitParticleCollection(allParticles);
 
 
+    //gParticleComputeUpdater.Init(MAX_PARTICLE_COUNT, computeShaderKey);
 
-
+    gParticleBuffer.Init(allParticles, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+    gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
     
     //GenerateCircle(&gCircleGeometry, circleRadius, true);
     //gCircleGeometry.Init(geometryProgramId);
@@ -341,7 +347,6 @@ Description:
     This function is registered with glutDisplayFunc(...) during glut's initialization.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void Display()
@@ -371,7 +376,8 @@ void Display()
 
 
     //??why isn't it drawing anything??
-    gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.05f);
+    //gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.05f);
+    gpParticleComputeUpdater->Update(0.01f);
 
 
 
@@ -397,8 +403,8 @@ void Display()
     //glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
 
     //TODO: re-enable
-    //glBindVertexArray(gPolygonFaceBuffer.VaoId());
-    //glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
+    glBindVertexArray(gPolygonFaceBuffer.VaoId());
+    glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
 
 
     // draw the frame rate once per second in the lower left corner
@@ -456,7 +462,6 @@ Parameters:
     w   The width of the window in pixels.
     h   The height of the window in pixels.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void Reshape(int w, int h)
@@ -478,7 +483,6 @@ Parameters:
     x       The horizontal viewport coordinates of the mouse's current position.
     y       The vertical window coordinates of the mouse's current position
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void Keyboard(unsigned char key, int x, int y)
@@ -513,7 +517,6 @@ Parameters:
     height          ??
 Returns:
     ??what??
-Exception:  Safe
 Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 unsigned int Defaults(unsigned int displayMode, int &width, int &height) 
@@ -533,7 +536,6 @@ Description:
     demo, I can just clean up everything here.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void CleanupAll()
@@ -561,7 +563,8 @@ void CleanupAll()
 
 
     //delete(gpParticleEmitterBar);
-    delete(gpParticleEmitterPoint);
+    delete gpParticleEmitterPoint;
+    delete gpParticleComputeUpdater;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -572,7 +575,6 @@ Parameters:
     argv    A pointer to an array of null-terminated, C-style strings.
 Returns:
     0 if program ended well, which it always does or it crashes outright, so returning 0 is fine
-Exception:  Safe
 Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 int main(int argc, char *argv[])

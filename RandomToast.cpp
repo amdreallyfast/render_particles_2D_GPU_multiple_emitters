@@ -22,7 +22,6 @@ Description:
 Parameters: None
 Returns:    
     A decently chaotic unsigned long (64bit) number.
-Exception:  Safe
 Creator:    Some online dude named Marsaglia (unknown date).
 -----------------------------------------------------------------------------------------------*/
 static unsigned long xorshf96(void) {          //period 2^96-1
@@ -49,7 +48,6 @@ Description:
 Parameters: None
 Returns:    
     See description.
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 float RandomOnRange0to1()
@@ -64,7 +62,6 @@ Description:
 Parameters: None
 Returns:
     See description.
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 unsigned long Random()
@@ -79,7 +76,6 @@ Description:
 Parameters: None
 Returns:
     See description.
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 long RandomPosAndNeg()
@@ -95,7 +91,6 @@ Description:
 Parameters: None
 Returns:
     A glm::vec3 with three random floats stuffed inside on the range 0.0f - 1.0f;
-Exception:  Safe
 Creator:    John Cox (6-12-2016)
 -----------------------------------------------------------------------------------------------*/
 glm::vec3 RandomColor()

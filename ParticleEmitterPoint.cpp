@@ -11,7 +11,6 @@ Parameters:
     minVel      The minimum velocity for particles being emitted.
     maxVel      The maximum emission velocity.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 ParticleEmitterPoint::ParticleEmitterPoint(const glm::vec2 &emitterPos, const float minVel, 
@@ -32,7 +31,6 @@ Description:
 Parameters:
     resetThis   Self-explanatory.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void ParticleEmitterPoint::ResetParticle(Particle *resetThis) const

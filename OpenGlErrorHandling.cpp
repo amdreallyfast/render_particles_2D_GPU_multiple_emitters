@@ -13,7 +13,6 @@ Parameters:
     Unknown.  The function pointer is provided to glDebugMessageCallbackARB(...), and that
     function is responsible for calling this one as it sees fit.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (2014)
 -----------------------------------------------------------------------------------------------*/
 void APIENTRY DebugFunc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,

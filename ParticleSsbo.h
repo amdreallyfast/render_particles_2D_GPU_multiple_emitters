@@ -2,7 +2,7 @@
 
 #include "SsboBase.h"
 #include "Particle.h"
-#include <string>
+#include <vector>
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -18,6 +18,7 @@ public:
     ParticleSsbo();
     virtual ~ParticleSsbo();
     
-    void Init(unsigned int numParticles, unsigned int renderProgramId);
+    //void Init(unsigned int numParticles, unsigned int renderProgramId);
+    void Init(const std::vector<Particle> &allParticles, unsigned int renderProgramId);
 };
 

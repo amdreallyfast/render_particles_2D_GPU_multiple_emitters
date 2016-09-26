@@ -40,7 +40,6 @@ Parameters:
     uniformTextColorLoc     The location of the color sampler variable in the FreeType shader 
                             program.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 FreeTypeAtlas::FreeTypeAtlas(const int uniformTextSamplerLoc, const int uniformTextColorLoc) :
@@ -63,7 +62,6 @@ Description:
     cleaning them up when it is done.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 FreeTypeAtlas::~FreeTypeAtlas()
@@ -86,7 +84,6 @@ Parameters:
 Returns:
     True if all went well, otherwise false.  At this time (8-20-2016), there is no way for it 
     return false.
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 bool FreeTypeAtlas::Init(const FT_Face face, const int fontPixelHeightSize)
@@ -445,7 +442,6 @@ Parameters:
                     can be a speedy alternative to making a new atlas.
     color           A 4-float array with the order RGBA.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 void FreeTypeAtlas::RenderText(const std::string &str, const float posScreenCoord[2],

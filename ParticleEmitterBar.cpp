@@ -12,7 +12,6 @@ Parameters:
     minVel      The minimum velocity for particles being emitted.
     maxVel      The maximum emission velocity.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 ParticleEmitterBar::ParticleEmitterBar(const glm::vec2 &p1, const glm::vec2 &p2, 
@@ -38,7 +37,6 @@ Description:
 Parameters:
 resetThis   Self-explanatory.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void ParticleEmitterBar::ResetParticle(Particle *resetThis) const
@@ -56,7 +54,6 @@ Description:
 Parameters: None
 Returns:    
     A vec4.
-Exception:  Safe
 Creator:    John Cox (9-20-2016)
 -----------------------------------------------------------------------------------------------*/
 glm::vec4 ParticleEmitterBar::GetBarStart() const
@@ -70,7 +67,6 @@ Description:
 Parameters: None
 Returns:
     A vec4.
-Exception:  Safe
 Creator:    John Cox (9-20-2016)
 -----------------------------------------------------------------------------------------------*/
 glm::vec4 ParticleEmitterBar::GetBarEnd() const
@@ -84,7 +80,6 @@ Description:
 Parameters: None
 Returns:
     A vec4.
-Exception:  Safe
 Creator:    John Cox (9-20-2016)
 -----------------------------------------------------------------------------------------------*/
 glm::vec4 ParticleEmitterBar::GetEmitDir() const

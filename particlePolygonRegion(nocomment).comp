@@ -2,6 +2,7 @@
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
+// TODO: have "previous pos" too and use that to calculate the point of crossing the face
 struct Particle
 {
     vec4 _pos;
@@ -9,74 +10,135 @@ struct Particle
     int _isActive;
 };
 
-struct PolygonFace
+struct MyVertex
 {
-    vec4 _p1;
-    vec4 _p2;
+    vec4 _pos;
     vec4 _normal;
 };
 
-uniform uint uParticleCount;
+struct PolygonFace
+{
+    MyVertex _start;
+    MyVertex _end;
+};
+
+uniform uint uMaxParticleCount;
 layout (binding = 0) buffer ParticleBuffer 
 {
     Particle AllParticles[];
 };
 
-//uniform uint uPolygonFaceCount;
-//layout (binding = 1) buffer FaceBuffer
-//{
-//    PolygonFace PolygonRegionFaces[];
-//};
+uniform uint uPolygonFaceCount;
+layout (binding = 1) buffer FaceBuffer
+{
+    PolygonFace PolygonRegionFaces[];
+};
 
 
-uniform float uDeltaTimeSec;
+vec4 QuickNormalize(vec4 v)
+{
+    return inversesqrt(dot(v, v)) * v;
+}
 
-float RandHash(vec4 co)
+vec4 LinearMix(vec4 v1, vec4 v2, float Between0And1)
+{
+    return (v1 * (1 - Between0And1)) + (v2 * Between0And1);
+}
+
+float RandHash(vec2 co)
 {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-//bool ParticleOutOfBoundsPolygon(Particle p)
-//{
-//    for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
-//    {
-//        PolygonFace f = PolygonRegionFaces[faceIndex];
-//
-//        vec4 faceToParticle = p._pos - f._p1;
-//        if (dot(faceToParticle, f._normal) < 0)
-//        {
-//            return true;
-//        }
-//    }
-//
-//    return false;
-//}
+float RandomOnRange0To1(vec2 hashInput)
+{
+    return RandHash(hashInput);
+}
+
+float RandomOnRangeNeg1ToPos1(vec2 hashInput1, vec2 hashInput2)
+{
+    if (RandomOnRange0To1(hashInput1) < 0.5)
+    {
+        return -1.0 * RandomOnRange0To1(hashInput2);
+    }
+    else
+    {
+        return +1.0 * RandomOnRange0To1(hashInput2);
+    }
+}
+
+bool ParticleOutOfBoundsPolygon(Particle p)
+{
+    for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
+    {
+        PolygonFace f = PolygonRegionFaces[faceIndex];
+    
+        // for this simple calculation, either the face's start or end point will work
+        vec4 faceToParticle = p._pos - f._start._pos;
+        if (dot(faceToParticle, f._start._normal) > 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 
+uniform float uDeltaTimeSec;
 uniform vec4 uPointEmitterCenter;
+uniform float uMinParticleVelocity;
+uniform float uDeltaParticleVelocity;
 Particle PointEmitterResetPos(Particle p)
 {
-    //vec4 seed1 = vec4(p._pos.x + 1.0, p._pos.y, 0.0, 0.0);
-    //vec4 seed2 = vec4(p._pos.x, p._pos.y + 1.0, 0.0, 0.0);
-    //vec4 seed3 = vec4(p._vel.x, p._vel.y, 0.0, 0.0);
-    //float velX = RandHash(seed1);
-    //float velY = RandHash(seed2);
-    //
-    //float variance = 0.05 * RandHash(seed3);
-    //
+    // need a lot of differnt seeds for the "random" hash
+    // Note: If the same seed is used for multiple hash summons, such as RandomOnRangeNeg1ToPos1(...), then the result will be random-ish on a limited range (learned by experience).
+    vec2 posSeed1 = vec2(p._pos.x + 0.0, p._pos.y + 0.0);
+    vec2 posSeed2 = vec2(p._pos.x + 1.0, p._pos.y + 0.0);
+    vec2 posSeed3 = vec2(p._pos.x + 0.0, p._pos.y + 1.0);
+    vec2 posSeed4 = vec2(p._pos.x + 1.0, p._pos.y + 1.0);
+    vec2 velSeed1 = vec2(p._vel.x + 0.0, p._vel.y + 0.0);
+    vec2 velSeed2 = vec2(p._vel.x + 1.0, p._vel.y + 0.0);
+    vec2 velSeed3 = vec2(p._vel.x + 0.0, p._vel.y + 1.0);
+    vec2 velSeed4 = vec2(p._vel.x + 1.0, p._vel.y + 1.0);
+    vec2 posVelSeed1 = vec2(p._pos.x + 0.0, p._vel.x + 0.0);
+    vec2 posVelSeed2 = vec2(p._pos.x + 1.0, p._vel.x + 0.0);
+    vec2 posVelSeed3 = vec2(p._pos.x + 0.0, p._vel.x + 1.0);
+    
+    Particle pCopy = p;
+    
+    vec4 basePosition = uPointEmitterCenter;
+    //float posX = 0.1 * RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
+    //float posY = 0.1 * RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
+    float posX = RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
+    float posY = RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
+
+    // pos is supposed to be translatable, so we want a 1 in the w position, but if it were 1 and got added to the point emitter center, which also has w = 1, then the result would be w = 2, and in the "out of bounds check" when a dot product is done and the particle position is part of it, then a w = 2 will always end up with a dot product > 1, which is our condition for out of bounds (lessons learned by experience)
+    //vec4 posVariance = QuickNormalize(vec4(posX, posY, 0.0, 0.0));
+    vec4 outerPosLimit = 0.1 * QuickNormalize(vec4(posX, posY, 0.0, 0.0));
+    //vec4 posVariance = LinearMix(vec4(), outerPosLimit, RandomOnRange0To1(posVelSeed1));
+    vec4 posVariance = LinearMix(vec4(0.0, 0.0, 0.0, 0.0), outerPosLimit, RandomOnRange0To1(posVelSeed1));
+    pCopy._pos = basePosition + posVariance;
+    //pCopy._pos = basePosition;
+    
+    // similar to the MinMaxVelocity::GetNew() on the CPU side
+    float velocityVariation = RandomOnRange0To1(posVelSeed2) * uDeltaParticleVelocity;
+    float velocityMagnitude = uMinParticleVelocity + velocityVariation;
+    float velX = RandomOnRangeNeg1ToPos1(velSeed1, velSeed2);
+    float velY = RandomOnRangeNeg1ToPos1(velSeed3, velSeed4);
+    vec4 randomVelocityVector = QuickNormalize(vec4(velX, velY, 0.0, 0.0));
+    pCopy._vel = randomVelocityVector * velocityMagnitude;
+    
+
     //Particle pCopy = p;
     //pCopy._pos = uPointEmitterCenter;
-    //pCopy._vel = variance * normalize(vec4(velX, velY, 0.0, 0.0));
 
-    Particle pCopy = p;
-    pCopy._pos = vec4(-0.5f, -0.5f, 0.0f, 1.0f);
-    pCopy._vel = vec4(+0.5f, +0.5f, 0.0f, 1.0f);
     return pCopy;
 }
 
 
-uniform vec4 uBarP1;
-uniform vec4 uBarP2;
+uniform vec4 uBarEmitterP1;
+uniform vec4 uBarEmitterP2;
 Particle BarEmitterReset(Particle p)
 {
     return p;
@@ -89,7 +151,7 @@ uniform mat4 _windowSpaceEmitterTransform;
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
-    if (index < uParticleCount)
+    if (index < uMaxParticleCount)
     {
         Particle p = AllParticles[index];
 
@@ -97,11 +159,11 @@ void main()
         p._pos = p._pos + deltaPosition;
         //p._pos = p._pos + 0.01f;
 
-        //// if it went out of bounds, reset it
-        //if (ParticleOutOfBoundsPolygon(p))
-        //{
-        //    p = PointEmitterResetPos(p);
-        //}
+        // if it went out of bounds, reset it
+        if (ParticleOutOfBoundsPolygon(p))
+        {
+            p = PointEmitterResetPos(p);
+        }
 
         AllParticles[index] = p;
     }

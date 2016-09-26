@@ -20,7 +20,6 @@ Description:
 Returns:
     A double indicating the fractions of a second corresponding to the argument counter.  This 
     is not "time elapsed" yet but is rather totally depended upon the "counter" argument.
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 static inline double CounterToSeconds(const LARGE_INTEGER counter)
@@ -33,7 +32,6 @@ Description:
     Sets up members to default values.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 Stopwatch::Stopwatch() :
@@ -49,7 +47,6 @@ Description:
     Must be called prior to use.  
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 void Stopwatch::Init()
@@ -70,7 +67,6 @@ Description:
     method calls.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 void Stopwatch::Start()
@@ -95,7 +91,6 @@ Description:
 Parameters: None
 Returns:    
     Fractions of a seconds since the last call to Start() or Lap().  The fraction can be >1.
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 double Stopwatch::Lap()
@@ -126,7 +121,6 @@ Description:
 Parameters: None
 Returns:
     Fractions of a seconds since the last call to Start() or Reset().  The fraction can be >1.
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 double Stopwatch::TotalTime()
@@ -151,7 +145,6 @@ Description:
     Reads the CPU's clock counter and resets the starting time.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (??-2015)
 -----------------------------------------------------------------------------------------------*/
 void Stopwatch::Reset()

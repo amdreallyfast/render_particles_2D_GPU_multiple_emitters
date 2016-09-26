@@ -2,7 +2,6 @@
 
 #include "Particle.h"
 #include "IParticleEmitter.h"
-#include "IParticleRegion.h"
 #include "ParticleEmitterPoint.h"
 #include "ParticleEmitterBar.h"
 #include <string>
@@ -24,35 +23,26 @@ Creator:    John Cox (9-18-2016)
 class ParticlePolygonComputeUpdater
 {
 public:
-    ParticlePolygonComputeUpdater();
-    
-    void Init(unsigned int numParticles, const std::string &computeShaderKey);
+    ParticlePolygonComputeUpdater(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey);
+
     bool AddEmitter(const IParticleEmitter *pEmitter, const int maxParticlesEmittedPerFrame);
+    void InitParticleCollection(std::vector<Particle> &initThis);
 
-    void Update(unsigned int numParticles, const float deltaTimeSec) const;
-
-    //void AddEmitter(const ParticleEmitterPoint *pEmitter, const int maxParticlesEmittedPerFrame);
-    //void AddEmitter(const ParticleEmitterBar *pEmitter, const int maxParticlesEmittedPerFrame);
-    // no "remove emitter" method because this is just a demo
-
-
-    //void Update(std::vector<Particle> &particleCollection, const unsigned int startIndex, 
-    //    const unsigned int numToUpdate, const float deltaTimeSec) const;
-    
-    
-    //void ResetAllParticles(std::vector<Particle> &particleCollection);
-
-    // no "reset all particles" method necessary here because all particles are initialized with their "is active" flag set to 0 (false), so they will be reset on the first run through the compute shader
+    void Update(const float deltaTimeSec) const;
 
 private:
+    unsigned int _totalParticleCount;
+
     // program ID is a GLuint
     unsigned int _computeProgramId;
 
-    // uniform locations are GLint
+    // unlike most OpeGL IDs, uniform locations are GLint
     int _unifLocParticleCount;
     int _unifLocPolygonFaceCount;
     int _unifLocDeltaTimeSec;
     int _unifLocPointEmitterCenter;
+    int _unifLocMinParticleVelocity;
+    int _unifLocDeltaParticleVelocity;
     int _unifLocBarP1;
     int _unifLocBarP2;
     int _unifLocWindowSpaceRegionTransform;
@@ -64,6 +54,4 @@ private:
     static const int MAX_EMITTERS = 2;
     std::vector<const ParticleEmitterPoint *> _pointEmitters;
     std::vector<const ParticleEmitterBar *> _barEmitters;
-    //const IParticleEmitter *_pEmitters[MAX_EMITTERS];
-    //unsigned int _maxParticlesEmittedPerFrame[MAX_EMITTERS];
 };

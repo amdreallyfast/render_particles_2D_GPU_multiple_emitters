@@ -14,7 +14,6 @@ Description:
     Gives member values default values.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 FreeTypeEncapsulated::FreeTypeEncapsulated()
@@ -32,7 +31,6 @@ Description:
     job??
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 FreeTypeEncapsulated::~FreeTypeEncapsulated()
@@ -46,7 +44,6 @@ Description:
 Parameters: None
 Returns:    
     True if all went well, false if there were problems.  Writes error messages to stderr.
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 bool FreeTypeEncapsulated::Init(const std::string &trueTypeFontFilePath, const unsigned int programId)
@@ -114,7 +111,6 @@ Parameters:
 Returns:
     A const shared pointer to a FreeTypeAtlas object, or 0 if something went wrong.  It is const 
     so that the user cannot even try to re-initialize it.  Error messages are written to stderr.
-Exception:  Safe
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 const std::shared_ptr<FreeTypeAtlas> FreeTypeEncapsulated::GetAtlas(const int fontSize)

@@ -47,18 +47,17 @@ Parameters:
 Returns:    None
 Creator: John Cox, 9-6-2016
 -----------------------------------------------------------------------------------------------*/
-void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
+void ParticleSsbo::Init(const std::vector<Particle> &allParticles, unsigned int renderProgramId)
+//void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
 {
     _drawStyle = GL_POINTS;
-    _numVertices = numParticles;
-
-    std::vector<Particle> allParticles(numParticles);
+    _numVertices = allParticles.size();
 
     // setting up this buffer does not require a program ID
     _bufferId = 0;
     glGenBuffers(1, &_bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * numParticles, allParticles.data(), 
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * allParticles.size(), allParticles.data(), 
         GL_STATIC_DRAW);
 
     // http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/

@@ -14,7 +14,6 @@ Description:
 Parameters:
     putDataHere     Self-explanatory. 
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (6-12-2016)
 -----------------------------------------------------------------------------------------------*/
 void GenerateTriangle(GeometryData *putDataHere)
@@ -61,7 +60,6 @@ Description:
 Parameters:
     putDataHere     Self-explanatory.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (6-12-2016)
 -----------------------------------------------------------------------------------------------*/
 void GenerateBox(GeometryData *putDataHere)
@@ -120,7 +118,6 @@ Parameters:
     wireframeOnly   If true, the circle prepares indices for GL_LINES.  If false, for 
                     GL_TRIANGLES.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (6-12-2016)
 -----------------------------------------------------------------------------------------------*/
 void GenerateCircle(GeometryData *putDataHere, float radius, bool wireframeOnly)
@@ -212,7 +209,6 @@ Parameters:
                     from outside the function, this option was provided to allow the user to 
                     specify the vertices clockwise and not have them culled.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-2-2016)
 -----------------------------------------------------------------------------------------------*/
 void GeneratePolygonWireframe(GeometryData *putDataHere, const std::vector<glm::vec2> &corners,

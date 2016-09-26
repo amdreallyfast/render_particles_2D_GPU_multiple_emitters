@@ -14,7 +14,6 @@ Description:
     It's a getter for a singleton...and...that's it.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (8-20-2016)
 -----------------------------------------------------------------------------------------------*/
 ShaderStorage &ShaderStorage::GetInstance()
@@ -28,7 +27,6 @@ Description:
     Ensures that the object starts object with initialized values.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
 ShaderStorage::ShaderStorage()
@@ -43,7 +41,6 @@ Description:
     glDeleteShader(...) and glDeleteProgram(...) as necessary to properly clean up.
 Parameters: None
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-16-2016)
 -----------------------------------------------------------------------------------------------*/
 ShaderStorage::~ShaderStorage()
@@ -81,7 +78,6 @@ Parameters:
     programKey  The name that will be used to refer to this shader for the rest of the program.
                 If it already exists, it prints a message to stderr and immediately returns.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-16-2016)
 -----------------------------------------------------------------------------------------------*/
 void ShaderStorage::NewShader(const std::string &programKey)
@@ -109,7 +105,6 @@ Description:
 Parameters:
     programKey  Delete the compiled shader program associated with this string.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-16-2016)
 -----------------------------------------------------------------------------------------------*/
 void ShaderStorage::DeleteProgram(const std::string &programKey)
@@ -234,7 +229,6 @@ Parameters:
     filePath    Can be relative to program or an absolute path.
     shaderType  GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, etc.
 Returns:    None
-Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
 void ShaderStorage::AddShaderFile(const std::string &programKey, const std::string &filePath,
@@ -298,7 +292,6 @@ Parameters:
 Returns:
     The ID of the resultant program, or 0 if no program was compiled (hopefully 0 is still an
     invalid value in the future.
-Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
 GLuint ShaderStorage::LinkShader(const std::string &programKey)
@@ -357,7 +350,6 @@ Parameters:
     programKey  The string key that was used for adding shader files and linking the binaries.
 Returns:
     The program ID for the requested shader, or 0 if requested shader not found.
-Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
 GLuint ShaderStorage::GetShaderProgram(const std::string &programKey) const
@@ -392,7 +384,6 @@ Parameters:
 Returns:
     A uniform location, or -1 if (1) the requested program doesn't exist or (2) the uniform 
     could not be found.
-Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
 GLint ShaderStorage::GetUniformLocation(const std::string &programKey,
@@ -429,7 +420,6 @@ Parameters:
 Returns:
     An attribute location, or -1 if (1) the requested program doesn't exist or (2) the uniform 
     could not be found.
-Exception:  Safe
 Creator:    John Cox (7-14-2016)
 -----------------------------------------------------------------------------------------------*/
 GLint ShaderStorage::GetAttributeLocation(const std::string &programKey,
