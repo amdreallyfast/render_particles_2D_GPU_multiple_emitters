@@ -71,7 +71,8 @@ FreeTypeEncapsulated gTextAtlases;
 
 // in a bigger program, uniform locations would probably be stored in the same place as the 
 // shader programs
-GLint gUnifMatrixTransformLoc;
+GLint gUnifLocGeometryTransform;
+
 
 //// in a bigger program, geometry data would be stored in some kind of "scene" or in a renderer
 //// or behind door number 3 so that collision boxes could get at the vertex data
@@ -297,7 +298,7 @@ void Init()
 
 
 
-    gUnifMatrixTransformLoc = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "translateMatrixWindowSpace");
+    gUnifLocGeometryTransform = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "transformMatrixWindowSpace");
 
     //// stick the point emitter in the geometric center of the polygon region
     //// Note: Repeat points do exist, but the average will sort that out.
@@ -372,12 +373,14 @@ void Display()
     // TODO: ??in the update method, bind both buffer bases to different binding points??
 
 
-
+    glm::mat4 windowSpaceTransform = glm::rotate(glm::mat4(), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+    windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
+    //glm::mat4 windowSpaceTransform = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
 
 
     //??why isn't it drawing anything??
     //gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.05f);
-    gpParticleComputeUpdater->Update(0.01f);
+    gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
 
 
 
@@ -400,7 +403,7 @@ void Display()
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
-    //glUniformMatrix4fv(gUnifMatrixTransformLoc, 1, GL_FALSE, glm::value_ptr(gRegionTransformMatrix));
+    glUniformMatrix4fv(gUnifLocGeometryTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
 
     //TODO: re-enable
     glBindVertexArray(gPolygonFaceBuffer.VaoId());

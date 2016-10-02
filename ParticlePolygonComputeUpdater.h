@@ -6,6 +6,7 @@
 #include "ParticleEmitterBar.h"
 #include <string>
 #include <vector>
+#include "glm/mat4x4.hpp"
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -28,7 +29,7 @@ public:
     bool AddEmitter(const IParticleEmitter *pEmitter, const int maxParticlesEmittedPerFrame);
     void InitParticleCollection(std::vector<Particle> &initThis);
 
-    void Update(const float deltaTimeSec) const;
+    void Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const;
 
 private:
     unsigned int _totalParticleCount;
@@ -38,6 +39,7 @@ private:
 
     // unlike most OpeGL IDs, uniform locations are GLint
     int _unifLocParticleCount;
+    int _unifLocParticleOffsetCount;
     int _unifLocPolygonFaceCount;
     int _unifLocDeltaTimeSec;
     int _unifLocPointEmitterCenter;

@@ -12,7 +12,7 @@ struct MyVertex
 {
     MyVertex(const glm::vec2 &pos, const glm::vec2 &normal) :
         _position(pos, 0.0f, 1.0f),
-        _normal(normal, 0.0f, 1.0f)
+        _normal(normal, 0.0f, 0.0f)
     {
 
     }

@@ -4,6 +4,7 @@
 #include "IParticleEmitter.h"
 
 #include "glload/include/glload/gl_4_4.h"
+#include "glm/gtc/type_ptr.hpp"
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -27,6 +28,7 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
 
     // these are constant through the program
     _unifLocParticleCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleCount");
+    _unifLocParticleOffsetCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleOffsetCount");
     _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
     _unifLocMinParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMinParticleVelocity");
     _unifLocDeltaParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaParticleVelocity");
@@ -46,8 +48,8 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
 
     // these are updated during Update(...)
     _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
-    _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceRegionTransform");
-    _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "_windowSpaceEmitterTransform");
+    _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceRegionTransform");
+    _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceEmitterTransform");
 
 }
 
@@ -149,7 +151,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec) const
+void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const
 {
     if (_pointEmitters.empty() && _barEmitters.empty())
     {
@@ -161,6 +163,8 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec) const
 
     glUseProgram(_computeProgramId);
     glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
+    glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+    glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
 
     // an array will not assume data order in glm's vec4
     glm::vec4 emitterPos = _pointEmitters[0]->GetPos();

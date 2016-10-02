@@ -13,10 +13,10 @@ Creator:    John Cox (7-2-2016)
 struct Particle
 {
     // TODO: header
-    // Sets initial values.  The glm structures have their own initialization and I don't care about the integer padding to "is active".  The "is active" flag starts at 0 because I want the first run of the particles to be reset to an emitter.
+    // Sets initial values.  The glm structures have their own zero initialization and I don't care about the integer padding to "is active".  The "is active" flag starts at 0 because I want the first run of the particles to be reset to an emitter.
     Particle() :
-        _position(+0.5f, +0.5f, 0.0f, 1.0f),
-        _velocity(-0.01f, -0.01f, 0.0f, 1.0f),
+        _position(),
+        _velocity(),
         _isActive(0)
     {
     }

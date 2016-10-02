@@ -23,6 +23,7 @@ struct PolygonFace
 };
 
 uniform uint uMaxParticleCount;
+uniform uint uParticleOffsetCount;  // used with multiple emitters working on different particles
 layout (binding = 0) buffer ParticleBuffer 
 {
     Particle AllParticles[];
@@ -67,15 +68,24 @@ float RandomOnRangeNeg1ToPos1(vec2 hashInput1, vec2 hashInput2)
     }
 }
 
+uniform mat4 uWindowSpaceRegionTransform;
 bool ParticleOutOfBoundsPolygon(Particle p)
 {
     for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
     {
         PolygonFace f = PolygonRegionFaces[faceIndex];
-    
+
         // for this simple calculation, either the face's start or end point will work
-        vec4 faceToParticle = p._pos - f._start._pos;
-        if (dot(faceToParticle, f._start._normal) > 0)
+
+        //vec4 faceToParticle = p._pos - f._start._pos;
+        //if (dot(faceToParticle, f._start._normal) > 0)
+        //{
+        //    return true;
+        //}
+
+        vec4 faceToParticle = p._pos - (uWindowSpaceRegionTransform * f._start._pos);
+        vec4 rotatedNormal = uWindowSpaceRegionTransform * f._start._normal;
+        if (dot(faceToParticle, rotatedNormal) > 0)
         {
             return true;
         }
@@ -89,10 +99,11 @@ uniform float uDeltaTimeSec;
 uniform vec4 uPointEmitterCenter;
 uniform float uMinParticleVelocity;
 uniform float uDeltaParticleVelocity;
+uniform mat4 uWindowSpaceEmitterTransform;
 Particle PointEmitterResetPos(Particle p)
 {
     // need a lot of differnt seeds for the "random" hash
-    // Note: If the same seed is used for multiple hash summons, such as RandomOnRangeNeg1ToPos1(...), then the result will be random-ish on a limited range (learned by experience).
+    // Note: If the same seed is used for multiple hash summons, such as RandomOnRangeNeg1ToPos1(...), then the result will be random-ish on a limited range (learned by experience) and doesn't look good.  so I use a lot of variations of the position and velocity to generate varying hash seeds.
     vec2 posSeed1 = vec2(p._pos.x + 0.0, p._pos.y + 0.0);
     vec2 posSeed2 = vec2(p._pos.x + 1.0, p._pos.y + 0.0);
     vec2 posSeed3 = vec2(p._pos.x + 0.0, p._pos.y + 1.0);
@@ -107,19 +118,19 @@ Particle PointEmitterResetPos(Particle p)
     
     Particle pCopy = p;
     
-    vec4 basePosition = uPointEmitterCenter;
-    //float posX = 0.1 * RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
-    //float posY = 0.1 * RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
+    vec4 basePosition = uWindowSpaceEmitterTransform * uPointEmitterCenter;
+    //vec4 basePosition = uPointEmitterCenter;
     float posX = RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
     float posY = RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
 
-    // pos is supposed to be translatable, so we want a 1 in the w position, but if it were 1 and got added to the point emitter center, which also has w = 1, then the result would be w = 2, and in the "out of bounds check" when a dot product is done and the particle position is part of it, then a w = 2 will always end up with a dot product > 1, which is our condition for out of bounds (lessons learned by experience)
-    //vec4 posVariance = QuickNormalize(vec4(posX, posY, 0.0, 0.0));
+    // need to normalize the outer limit (), but to do that we can't have a 1 in the w position 
+    // or else the X and Y's normalization get's messed up
+    // Note: Window space is on the range [-1,+1] on X and Y, hence the normalizing.
+    // Also Note: Anything with w = 1 is meant to be translated but not normalized, while any 
+    // vector with w = 0 is the reverse.
     vec4 outerPosLimit = 0.1 * QuickNormalize(vec4(posX, posY, 0.0, 0.0));
-    //vec4 posVariance = LinearMix(vec4(), outerPosLimit, RandomOnRange0To1(posVelSeed1));
-    vec4 posVariance = LinearMix(vec4(0.0, 0.0, 0.0, 0.0), outerPosLimit, RandomOnRange0To1(posVelSeed1));
+    vec4 posVariance = LinearMix(uPointEmitterCenter, outerPosLimit, RandomOnRange0To1(posVelSeed1));
     pCopy._pos = basePosition + posVariance;
-    //pCopy._pos = basePosition;
     
     // similar to the MinMaxVelocity::GetNew() on the CPU side
     float velocityVariation = RandomOnRange0To1(posVelSeed2) * uDeltaParticleVelocity;
@@ -129,10 +140,6 @@ Particle PointEmitterResetPos(Particle p)
     vec4 randomVelocityVector = QuickNormalize(vec4(velX, velY, 0.0, 0.0));
     pCopy._vel = randomVelocityVector * velocityMagnitude;
     
-
-    //Particle pCopy = p;
-    //pCopy._pos = uPointEmitterCenter;
-
     return pCopy;
 }
 
@@ -144,8 +151,6 @@ Particle BarEmitterReset(Particle p)
     return p;
 }
 
-uniform mat4 _windowSpaceRegionTransform;
-uniform mat4 _windowSpaceEmitterTransform;
 
 
 void main()
@@ -157,13 +162,19 @@ void main()
 
         vec4 deltaPosition = p._vel * uDeltaTimeSec;
         p._pos = p._pos + deltaPosition;
-        //p._pos = p._pos + 0.01f;
 
         // if it went out of bounds, reset it
         if (ParticleOutOfBoundsPolygon(p))
         {
             p = PointEmitterResetPos(p);
         }
+
+        // TODO: new algorithm with atomic counters for "particles emitted per emitter per frame":
+        // if (out of bounds) > set "is active" = 0
+        // if (atomic counter < max particles per frame this emitter) > reset particle to emitter in use
+        //??how to use an atomic counter??
+        // ??how to reset an atomic counter for a compute shader in use and not affect the already-dispatched compute shader??
+
 
         AllParticles[index] = p;
     }

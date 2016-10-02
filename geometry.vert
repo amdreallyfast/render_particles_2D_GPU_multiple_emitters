@@ -2,7 +2,7 @@
 
 layout (location = 0) in vec4 pos;
 
-uniform mat4 translateMatrixWindowSpace;
+uniform mat4 transformMatrixWindowSpace;
 
 void main()
 {
@@ -13,7 +13,8 @@ void main()
     
     
     //gl_Position = translateMatrixWindowSpace * vec4(pos, -1.0f, 1.0f);
+    gl_Position = transformMatrixWindowSpace * pos;
     //gl_Position = vec4(pos, -1.0f, 1.0f);
-    gl_Position = pos;
+    //gl_Position = pos;
 }
 
