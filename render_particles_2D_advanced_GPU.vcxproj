@@ -154,8 +154,6 @@
     <ClCompile Include="OpenGlErrorHandling.cpp" />
     <ClCompile Include="ParticleEmitterBar.cpp" />
     <ClCompile Include="ParticleEmitterPoint.cpp" />
-    <ClCompile Include="ParticleRegionPolygon.cpp" />
-    <ClCompile Include="ParticleRegionCircle.cpp" />
     <ClCompile Include="ParticleSsbo.cpp" />
     <ClCompile Include="ParticlePolygonComputeUpdater.cpp" />
     <ClCompile Include="PolygonSsbo.cpp" />
@@ -168,13 +166,11 @@
   <ItemGroup>
     <None Include="freeType.frag" />
     <None Include="freeType.vert" />
-    <None Include="particlePolygonRegion(nocomment).comp" />
     <None Include="particlePolygonRegion.comp" />
     <None Include="particleRender.frag" />
     <None Include="particleRender.vert" />
     <None Include="geometry.frag" />
     <None Include="geometry.vert" />
-    <None Include="shaderVersion.whatevs" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeTypeAtlas.h" />
@@ -184,14 +180,11 @@
     <ClInclude Include="PolygonSsbo.h" />
     <ClInclude Include="SsboBase.h" />
     <ClInclude Include="IParticleEmitter.h" />
-    <ClInclude Include="IParticleRegion.h" />
     <ClInclude Include="MinMaxVelocity.h" />
     <ClInclude Include="OpenGlErrorHandling.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleEmitterBar.h" />
     <ClInclude Include="ParticleEmitterPoint.h" />
-    <ClInclude Include="ParticleRegionPolygon.h" />
-    <ClInclude Include="ParticleRegionCircle.h" />
     <ClInclude Include="ParticleSsbo.h" />
     <ClInclude Include="ParticlePolygonComputeUpdater.h" />
     <ClInclude Include="PolygonFace.h" />

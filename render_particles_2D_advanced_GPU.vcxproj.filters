@@ -9,12 +9,6 @@
     <ClCompile Include="ParticleEmitterBar.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleRegionPolygon.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleRegionCircle.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
     <ClCompile Include="PrimitiveGeneration.cpp">
       <Filter>Solids</Filter>
     </ClCompile>
@@ -62,17 +56,8 @@
     <ClInclude Include="ParticleEmitterBar.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="IParticleRegion.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleRegionPolygon.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
     <ClInclude Include="ShaderStorage.h">
       <Filter>Shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleRegionCircle.h">
-      <Filter>Particles</Filter>
     </ClInclude>
     <ClInclude Include="PrimitiveGeneration.h">
       <Filter>Solids</Filter>
@@ -125,13 +110,7 @@
     <None Include="freeType.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="shaderVersion.whatevs">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="particlePolygonRegion.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particlePolygonRegion(nocomment).comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
