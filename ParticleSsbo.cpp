@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "glload/include/glload/gl_4_4.h"
-
+#include "ShaderStorage.h"
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -42,27 +42,51 @@ Description:
     shader runs, it will reset any inactive particles that it comes across, and the particle 
     rendering shader will render inactive particles as black.  This will still look ok.
 Parameters: 
-    numParticles    Determines the size of the SSBO.
-    renderProgramId The rendering shader that will be drawing this polygon.
+    numParticles        Determines the size of the SSBO.
+    computeProgramId    Required for binding the compute shader's particle buffer to the SSBO.
+    renderProgramId     The rendering shader that will be drawing this polygon.
 Returns:    None
 Creator: John Cox, 9-6-2016
 -----------------------------------------------------------------------------------------------*/
-void ParticleSsbo::Init(const std::vector<Particle> &allParticles, unsigned int renderProgramId)
-//void ParticleSsbo::Init(unsigned int numParticles, unsigned int renderProgramId)
+void ParticleSsbo::Init(const std::vector<Particle> &allParticles, 
+    unsigned int computeProgramId, unsigned int renderProgramId)
 {
     _drawStyle = GL_POINTS;
     _numVertices = allParticles.size();
 
-    // setting up this buffer does not require a program ID
+    // unlike the VAOs, the compute shader program is not required for buffer creation, but it 
+    // is required for buffer binding
     _bufferId = 0;
     glGenBuffers(1, &_bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * allParticles.size(), allParticles.data(), 
         GL_STATIC_DRAW);
 
-    // http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, _bufferId);
+    // binding requires some setup
+    // Note: The shader and the just-created buffer need to talk to each other.  
+    // (1) Search the compute shader for a shader storage block (indicated by the keyword 
+    //  "buffer") called "ParticleBuffer".
+    // (2) Tell the compute shader that the storage block called "ParticleBuffer" will be 
+    //  assigned to a particular "binding" location.  This can be that be 0, or 1, or 2, or 43, 
+    //  or 80, or anywhere from 0 to GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS.  As long as it 
+    //  DOESN'T INTERFERE WITH ANY OTHER BINDING IN THIS SHADER, then it should be fine.  If 
+    //  this SSBO has binding point 1 and the geometry render shader uses, say, a vec4 for 
+    //  binding point 1, this is ok because they are different shaders.
+    // (3) Tell OpenGL that the just-created shader storage block object (this is the CPU side) 
+    //  will use the same binding location.  If we tell OpenGL that the compute shader's storage 
+    //  block called "ParticleBuffer" will use, say, binding point 3, and then we tell OpenGL 
+    //  that the just-created SSBO will use binding point 67, then the compute shader will see 
+    //  an unallocated buffer and not be able to do anything.  The render shader will then 
+    //  happily keep rendering the particles at their starting location and the particles appear 
+    //  to go nowhere.  So get the bindings straight :).
+    // Also Note: Thanks to geeks3.com for the "how to".  
+    //  http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/
+    GLuint ssboBindingPointIndex = 3;   // or 1, or 5, or 17, or wherever IS UNUSED
+    GLuint storageBlockIndex = glGetProgramResourceIndex(computeProgramId, GL_SHADER_STORAGE_BLOCK, "ParticleBuffer");
+    glShaderStorageBlockBinding(computeProgramId, storageBlockIndex, ssboBindingPointIndex);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssboBindingPointIndex, _bufferId);
 
+    // cleanup
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     // set up the VAO

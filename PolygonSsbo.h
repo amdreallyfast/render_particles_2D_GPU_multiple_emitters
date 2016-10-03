@@ -16,6 +16,7 @@ public:
     PolygonSsbo();
     virtual ~PolygonSsbo();
 
-    void Init(const std::vector<PolygonFace> &faceCollection, unsigned int renderProgramId);
+    void Init(const std::vector<PolygonFace> &faceCollection, unsigned int computeProgramId, 
+        unsigned int renderProgramId);
 };
 

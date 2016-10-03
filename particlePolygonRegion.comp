@@ -1,140 +1,12 @@
-
-
-// TODO: make separate compute shader with notes, then leave the one in use with no comments so that it looks lean (ALTERNATE: split the compute shader into multiple parts and add the files one by one)
-
-
-
-
-/************************************************************************************************
-------------------------------------------------------------------------------------------------
-On the use of vec4:
-GLSL assigns every value (int, bool, float, char, etc.) a 16-byte value.  This demo program is 
-in 2D only, so I only need a vec2 for all the points that I need, but simply adding 2 floats of 
-padding to the corresponding vec2 structures on the CPU side didn't seem to line them up.  So I
-decided to use a vec4 for all my points.  It made my life easier.
-
-------------------------------------------------------------------------------------------------
-On specifying the work item count:
-Ex: layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
-
-This demo program goes through a large array of particles, but a whole bunch of shader instances 
-are running at one time.  Compute shaders introduce order by keeping track of a 3D work item 
-count.  For each work group, the number of which is specified on the CPU side of the program 
-when the compute shader is summoned, all the work items will be called.  
-
-For example, supposed there are 10,000 particles in the array.  The compute shader is kicked 
-into gear by 
-glDispatchCompute(numWorkGroupsX, numWorkGroupsY, and numWorkGroupsZ).  
-Since compute shaders are often used to compute for 3D gaming or rendering environments, this 
-made sense to the creators of the OpenGL compute shader standard.  
-
-Now suppose that I want to make 256 particles on each compute thread.  Then 
-10,000 / 256 = ~39 work groups.  This means (??you sure??) that there will be 39 parallel 
-threads of this shader and the GPU will schedule them whenever it can.  At the time of this 
-comment (9-3-2016), there doesn't seem to be an optimal number of work groups 
-(http://gamedev.stackexchange.com/questions/66198/optimal-number-of-work-groups-for-compute-shaders).  
-
-When I specify the layout, I must use this same number (256).  To get 10,000 work items 
-(individual calls to the compute shader's main()), then I must do this:
-CPU code: glDispatchCompute(39, 1, 1);
-GPU code: layout (local_size_x = 256, local_size_y = 1, local_size_z = 1);
-Equivalent GPU code: layout (local_size_x = 256);
-
-The global work item number for any given call to the compute shader's main() is 
-"local work group number * local work item number".  
-Ex: Suppose the GPU is working on work group 24 (out of 39), and this thread is on invocation 
-159 (out of 256).  Then the global work item number is 24 * 159 = 3816.
-
-From the OpenGL ARB (Architecture Review Board): 
-    https://www.opengl.org/registry/specs/ARB/compute_shader.txt
-        The built-in variable <gl_LocalInvocationID> is a compute-shader input
-    variable containing the 3-dimensional index of the local work group
-    within the global work group that the current invocation is executing in.
-    The possible values for this variable range across the local work group
-    size, i.e. (0,0,0) to (gl_WorkGroupSize.x - 1, gl_WorkGroupSize.y - 1,
-    gl_WorkGroupSize.z - 1).
-
-The "invocation ID" (the global work item number) starts at 0, so it is therefore suitable as an 
-index.  Now I can use the work item number as an index into the particle array.  
-
-Now why "x"?  Because I decided to use the X axis in the compute shader.  I could have done it 
-with Y or Z or did some kind of computation to work out an index into the particle array, but it 
-was easier to just use one axis of the compute shader for a 1D array.
-
-I could call "*.y" or "*.z", but that wouldn't be helpful size the layout specifies those as 1.  
-According to the equation given earlier for the work item number and the "local size" of Y and Z 
-being 1, the global work item on Y and Z will always be "work group * 1".  That means only 40 
-work items in this example.  Not helpful when I have 10,000 particles.  
-
-Anyway, to get the global work item number for an individual call to the compute shader's 
-main(), I call this:
-uint i = gl_GlobalInvocationID.x;
-
-Problem: This example will only summon 39 * 256 = 9,984 work items.  This is less than the size 
-of the particle array, so if I use the work item number as the index, some particles will never 
-be accessed.  
-Solution: On the CPU it is good practice to instead do this:
-(10,000 / 256) + 1 = ~40.  And 40 * 256 = 10,240 work items.  This is greater than the array 
-size, so now I need to ignore work item numbers that exceed the max index.
-
-Then I use a uniform to tell me how many particles are actually in the array.  I compare the 
-work item number against it, and if it exceeds the total number of particles, then the shader 
-doesn't do anything.  Will there be some wasted calls?  Sure, but the GPU keeps its cores busy 
-with other calls, so it isn't much of a performance loss.
-
-Sample code:
-
-uniform uint uMaxParticleCount;
-void main()
-{
-    uint index = gl_GlobalInvocationID.x;
-    if (index < uMaxParticleCount)
-    {
-        // do the thing
-    }
-    else
-    {
-        // nothing to do, so this GPU core immediately returns and moves on to the next job
-    }
-}
-
-------------------------------------------------------------------------------------------------
-On accessing and changing items in a buffer:
-I specify a single buffer in this manner:
-
-layout (binding = 0) buffer ParticleBuffer {
-    Particle AllParticles[];
-};
-
-This is a special buffer called a Uniform Buffer Object (UBO).  In this demo, the uniform buffer 
-object contains a large, 1D array of data formatted after the Particle structure.  I could have 
-told this shader that the data is formatted differently and it would have believed me, but then 
-the bytes wouldn't line up and it would be useless.
-
-Anyway.  There are no pointers or references in GLSL.  Everything is copy only, which is a good 
-thing during parallel workloads because it means that you have to be very deliberate to intrude 
-on another thread's working data.
-
-To change a particle:
-Particle p = AllParticles[someIndex];
-...change particle data...
-AllParticles[theSameIndex] = p;
-
-Where "someIndex" is the global work item assigned to this particular invocation of the compute 
-shader's main().  If I access any other index, then I am running over another thread's work.  
-
-Multithread responsibly.
-
-
-************************************************************************************************/
-
-
 #version 440
 
-// indices (that is, work item #) for the particle array
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
-// this must match the layout of the Particle structure defined on the CPU side
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Stores info about a single particle.  Must match the version on the CPU side.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
 struct Particle
 {
     vec4 _pos;
@@ -142,119 +14,214 @@ struct Particle
     int _isActive;
 };
 
-// like Particle, this must also match the memory layout defined on the CPU side
-struct PolygonFace
+/*-----------------------------------------------------------------------------------------------
+Description:
+    OpenGL rendering uses the same "Polygon Face" buffer, and OpenGL rendering takes vertices 
+    one at a time.  I originally tried making each face into a single structure with two 
+    positions and one normal, but then the rendering treated the whole thing like a single 
+    vertex.  Whoops.  So I have to specify each vertex individually for the sake of rendering 
+    and then match that here in the compute shader.
+    
+    Must match the version on the CPU side.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+struct MyVertex
 {
-    vec4 _p1;
-    vec4 _p2;
+    vec4 _pos;
     vec4 _normal;
 };
 
-uniform uint uParticleCount;
-
-// Note: According to the documentation for shader storage buffer objects, "there can only be 
-// one array of variable size per SSBO and it has to be the bottommost in the layout definition."
-// See here: https://www.opengl.org/wiki/Shader_Storage_Buffer_Object.
-layout (binding = 0) buffer ParticleBuffer 
+/*-----------------------------------------------------------------------------------------------
+Description:
+    This demo is in 2D, so each polygon face is described by two vertices.  In 3D, this 
+    structure will be updated to contain three.
+    
+    Must match the version on the CPU side.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+struct PolygonFace
 {
+    MyVertex _start;
+    MyVertex _end;
+};
+
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    This is the array of particles that the compute shader will be accessing.  It is set up on 
+    the CPU side in ParticleSsbo::Init(...).
+
+    Note: Instead of the hard-coded binding point as was used in the "render particles 2D basic" 
+    project, the binding point is determined on the CPU side.  Is that necessary in this demo?  
+    No.  Binding points are relevant only to a particular shader and the CPU side needs to, at 
+    least, tell OpenGL that the just-created SSBO should be bound to the same binding point 
+    ("binding = 0" here in the shader means glBindBufferBase(..., 0, ...0 in the SSBO setup), 
+    but if the user doesn't want to handle the binding on both the shader side and the CPU side, 
+    then this demo shows how to handle binding entirely on the CPU side.
+    
+    Also Note: Without the binding point specifier, which implicitly assumed std430, then the 
+    layout standard needs to be specified explicitly.  According to this website under heading 
+    "Layout std430, new and better std140", std430 is the ONLY layout specifier available for 
+    SSBOs.  I don't know what it does, but it is necessary.  
+    http://malideveloper.arm.com/resources/sample-code/introduction-compute-shaders-2/
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+uniform uint uMaxParticleCount;
+uniform uint uParticleOffsetCount;  // used with multiple emitters working on different particles
+layout (std430) buffer ParticleBuffer
+{
+    // Note: According to the documentation for shader storage buffer objects, "there can only 
+    // be one array of variable size per SSBO and it has to be the bottommost in the layout 
+    // definition."  This means that, if I wanted to define anything else in here (I don't since 
+    // it is an array of Particle structures whose size is determined on the CPU side), then I 
+    // would have to declare it before the array.  If I declared it after, then the shader won't 
+    // compile.
+    // See here: https://www.opengl.org/wiki/Shader_Storage_Buffer_Object.
     Particle AllParticles[];
 };
 
-// every particle needs to be checked against every face of the polygon, and I need to know the 
-// size of the PolygonRegionFaces array in order to loop through them
+/*-----------------------------------------------------------------------------------------------
+Description:
+    This is the array of polygon faces that the compute shader will access for bounds checking.  
+    It is set up on the CPU side in PolygonSsbo::Init(...).
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
 uniform uint uPolygonFaceCount;
-layout (binding = 1) buffer FaceBuffer
+layout (std430) buffer FaceBuffer
 {
     PolygonFace PolygonRegionFaces[];
 };
 
-
-uniform float uDeltaTimeSec;
-
-
-// FUNCTIONS 
-// because GLSL doesn't have a #include and I either need to jump through some hoops to add a bunch of different shader files together (not too difficult, but determined to be better for this particular demo to have all the functions in one file)
-
-
-/************************************************************************************************
+/*-----------------------------------------------------------------------------------------------
 Description:
-    Found online: 
+    A convenience function whose name indicates its purpose.  Also useful so that I don't have 
+    to type the actual vector name three times.  This isn't quite as accurate as a real square 
+    root, but from what I've read, it is pretty accurate out to a few decimal places, so it's 
+    good enough for simulation work.
+Parameters:
+    v   The vec4 to be normalized.
+Returns:
+    A normalized copy of input v;
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+vec4 QuickNormalize(vec4 v)
+{
+    return inversesqrt(dot(v, v)) * v;
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Helps to generate a random displacement region around a particle's spawn point.  It gives 
+    the illusion that the particles come from a cloud instead of a point.  It's a "looks nice" 
+    feature.
+Parameters:
+    v1              The start of the linear blend.
+    v2              The end of the linear blend.
+    Between0And1    Some fraction of the difference between v1 and v2.
+Returns:
+    A vec4 that is linearly blended according to Between0and1.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+vec4 LinearMix(vec4 v1, vec4 v2, float Between0And1)
+{
+    return (v1 * (1 - Between0And1)) + (v2 * Between0And1);
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Found online:
     http://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
 
-    This is only as random as the input.  It is a hash function.  It generates a large fraction, 
-    then uses fract(...) to get a number between -0.99... and +0.99...
+    Like rand() on the CPU side, this is a chaotic hash function whose output is only as random 
+    as the input.  Calling it multiple times with the same input will always generate the same 
+    output.  But unlike rand(), this function does not have access to OS-level calls to the 
+    CPU's clock counter, nor is there access to any of the GPU's clock counters, so inputs must 
+    be provided by ourselves.
+
+    Note: This restriction on GLSL randomness is why the particles all need to be initialized 
+    on the CPU side with non-0 values.  I tried all 0s.  The particles kept getting "random" 
+    new velocities of 0.
 Parameters:
-    co      I don't know what this stands for, but it was in the source code.
-            Note: I changed the input from the source's vec2 to a vec4 because everything else 
-            uses a vec4 in this program.
+    co  A vec2 seed.  The algorithm that I found online used a vec2, and I didn't change that.  ??how to make use of a vec4? what numbers do I add to the dot??
 Returns:
-    A random float on the range [-0.99..., +0.99...];
-Creator:    Unknown
-************************************************************************************************/
-float RandHash(vec4 co)
+    A semi-random float.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+float RandHash(vec2 co)
 {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-// because I only need the square of the radius for my boundary check
-uniform float uRadiusSqr;
-uniform vec4 uParticleRegionCircleCenter;
-
-///************************************************************************************************
-//Description:
-//    Checks if the provided particle has gone outside of a circle defined by a uniform center and 
-//    a uniform radius.
-//
-//    Why uniforms?  Because this function's cousin, "particle out of bounds polygon" cannot take 
-//    a buffer as an argument and so must rely on a uniform buffer object and other uniforms, so I 
-//    decided to make this function also use the same handicap.  It makes the coding consistent.
-//Parameters:
-//    p       A Particle instance.  It is not a reference or a pointer, but a copy.  It can 
-//            therefore be used as a local variable, but as a matter of personal coding principle, 
-//            I do not use an argument as a local variable.
-//Returns:
-//    True if the particle is outside the circle's bounds, otherwise false.
-//Creator:    John Cox, 9-3-2016
-//************************************************************************************************/
-//bool ParticleOutOfBoundsCircle(Particle p)
-//{
-//    vec4 particleToRegionCenter = p._pos - uParticleRegionCircleCenter;
-//    float distSqr = dot(particleToRegionCenter, particleToRegionCenter);
-//
-//    if (distSqr > uRadiusSqr)
-//    {
-//        return true;
-//    }
-//
-//    // still in bounds
-//    return false;
-//}
-
-/************************************************************************************************
+/*-----------------------------------------------------------------------------------------------
 Description:
-    Checks if the provided particle has gone outside of any of the faces of the polygon region
-    that is defined in the PolygonRegionFaces array.  
+    A convenience function that uses RandHash(...) to generate a random number on the range 
+    [0,+1] (I think; I don't know if it actually hits 0 or +1).
+Parameters:
+    hashInput   A vec2 seed.  Needed by RandHash(...).
+Returns:
+    A semi-random float on the range [0,+1].
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+float RandomOnRange0To1(vec2 hashInput)
+{
+    return RandHash(hashInput);
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Another convenience function that uses RandHash(...), this time using two hash seeds to 
+    generate a single number on the range [-1,+1] (again, I don't know if it actually hits -1 or 
+    +1 exactly).  It is used to generate random X and Y velocity vectors for newly-eminating 
+    particles.  If both hash seeds are the same, then the resulting particles only tend to spray 
+    off in roughly 4 different cones that roughly correspond to the diagonals on an X-Y 2D grid. 
+    So give it different inputs :).
+Parameters:
+    hashInput1  A vec2 seed.  Needed by RandHash(...).
+    hashInput2  Another vec2 seed.
+Returns:
+    A semi-random float on the range [-1,+1].
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+float RandomOnRangeNeg1ToPos1(vec2 hashInput1, vec2 hashInput2)
+{
+    if (RandomOnRange0To1(hashInput1) < 0.5)
+    {
+        return -1.0 * RandomOnRange0To1(hashInput2);
+    }
+    else
+    {
+        return +1.0 * RandomOnRange0To1(hashInput2);
+    }
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Checks if the provided particle has gone outside of any of the faces specified in the 
+    PolygonRegionFaces buffer.
 
     Note: This algorithm only works on concave polygons.  That is, it only works on a polygon in 
-    which all face normals point roughly towards the center.  The algorithm simply checks if a 
-    vector from the face center to the particle's position is more than 90 degrees away from the 
-    face normal.
+    which all face normals point roughly towards the center.  This algorithm simply checks if a 
+    vector from the face (either start or end; both work) to the particle's position is more 
+    than 90 degrees away the face normal.
 Parameters:
-    p       A Particle instance.  It is not a reference or a pointer, but a copy.  It can 
-            therefore be used as a local variable, but as a matter of personal coding principle, 
-            I do not use an argument as a local variable.
+    p   A Particle instance.  It is not a reference or a pointer (GLSL doesn't do either), but a 
+        copy.  If can therefore be used as a local variable, but as a matter of personal coding 
+        principle, I do not use an argument as a local variable.
 Returns:
-    True if the particle is out of bounds, otherwise false.
-Creator:    John Cox, 9-5-2016
-************************************************************************************************/
+    A semi-random float on the range [-1,+1].
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+uniform mat4 uWindowSpaceRegionTransform;
 bool ParticleOutOfBoundsPolygon(Particle p)
 {
     for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
     {
         PolygonFace f = PolygonRegionFaces[faceIndex];
 
-        vec4 faceToParticle = p._pos - f._p1;
-        if (dot(faceToParticle, f._normal) < 0)
+        // for this simple calculation, either the face's start or end point will work
+        vec4 faceToParticle = p._pos - (uWindowSpaceRegionTransform * f._start._pos);
+        vec4 rotatedNormal = uWindowSpaceRegionTransform * f._start._normal;
+        if (dot(faceToParticle, rotatedNormal) > 0)
         {
             return true;
         }
@@ -263,72 +230,115 @@ bool ParticleOutOfBoundsPolygon(Particle p)
     return false;
 }
 
+// these two are used to give the particles a min velocity plus a fraction of the min-max delta, 
+// and it is used in both particle emitters (point emitter and bar emitter)
+uniform float uMinParticleVelocity;
+uniform float uDeltaParticleVelocity;
 
-uniform vec4 uPointEmitterCenter;
 
-/************************************************************************************************
+/*-----------------------------------------------------------------------------------------------
 Description:
-    Resets the provided particle:
-    (1) Sets its location to that of the point particle emitter (a uniform).
-    (2) Sets its velocity to a random 2D direction.
+    Resets a particle to a point emitter's position plus a variation on the position that gives
+    the particles the appearance of eminating from a cloud (looks nicer than eminating from a
+    point).
 
-    If the particle is only passed by copy and the reset position is set in stone and the 
-    velocity is random, why is there an argument at all?  Because the random velocity 
-    calculation is actually a choatic hash function and not entirely random.  The particle's 
-    most likely unique floating point values are needed to seed that chaotic hash function.
+    Several random values are required during the reset to give the particles random starting 
+    position and random velocity, so a bunch of RandHash(...) seeds are generated from the 
+    particle's position and velocity.  This is why the particles must be initialized with 
+    non-0 values (from experience: starting with 0 values causes RandHash(...) to spit out 0s 
+    and then the particles don't do anything...whoops).
 Parameters:
-    p       A Particle instance.  
+    p   A Particle instance.  
 Returns:
-    A Particle with a position at the point emitter's location and a random 2D velocity.
-Creator:    John Cox, 9-3-2016
-************************************************************************************************/
+    A Particle object with a random 2D velocity and a position that is the point emitter's 
+    position plus a small variation on that position to give the appearance of spawning in a 
+    particle cloud.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+uniform vec4 uPointEmitterCenter;
+uniform mat4 uWindowSpaceEmitterTransform;
 Particle PointEmitterResetPos(Particle p)
 {
-    // there is enough chaos in the random number generator for just a change in 1 to create a 
-    // very different number
-    vec4 seed1 = vec4(p._pos.x + 1.0, p._pos.y, 0.0, 0.0);
-    vec4 seed2 = vec4(p._pos.x, p._pos.y + 1.0, 0.0, 0.0);
-    vec4 seed3 = vec4(p._vel.x, p._vel.y, 0.0, 0.0);
-    float velX = RandHash(seed1);
-    float velY = RandHash(seed2);
-
-    // the "random" function returns a value on the range [-0.99..., +0.99...], and those limits 
-    // are the same as window space ([-1,+1]), which this demo is running in, so cut the random 
-    // range down so that the upper limits won't make ludicrously fast particles
-    float variance = 0.05 * RandHash(seed3);
-
-    // arguments are passed by value in GLSL, so I could use the argument as a local variable, 
-    // but that code would smell funny, so I'll make a local copy of it 
+    // need a lot of differnt seeds for the "random" hash
+    // Note: If the same seed is used for multiple hash summons, such as 
+    // RandomOnRangeNeg1ToPos1(...), then the result will be random-ish on a limited range 
+    // (learned by experience) and doesn't look good.  So I use a lot of variations of the 
+    // position and velocity to generate varying hash seeds.
+    vec2 posSeed1 = vec2(p._pos.x + 0.0, p._pos.y + 0.0);
+    vec2 posSeed2 = vec2(p._pos.x + 1.0, p._pos.y + 0.0);
+    vec2 posSeed3 = vec2(p._pos.x + 0.0, p._pos.y + 1.0);
+    vec2 posSeed4 = vec2(p._pos.x + 1.0, p._pos.y + 1.0);
+    vec2 velSeed1 = vec2(p._vel.x + 0.0, p._vel.y + 0.0);
+    vec2 velSeed2 = vec2(p._vel.x + 1.0, p._vel.y + 0.0);
+    vec2 velSeed3 = vec2(p._vel.x + 0.0, p._vel.y + 1.0);
+    vec2 velSeed4 = vec2(p._vel.x + 1.0, p._vel.y + 1.0);
+    vec2 posVelSeed1 = vec2(p._pos.x + 0.0, p._vel.x + 0.0);
+    vec2 posVelSeed2 = vec2(p._pos.x + 1.0, p._vel.x + 0.0);
+    vec2 posVelSeed3 = vec2(p._pos.x + 0.0, p._vel.x + 1.0);
+    
     Particle pCopy = p;
-    pCopy._pos = uPointEmitterCenter;
-    pCopy._vel = variance * normalize(vec4(velX, velY, 0.0, 0.0));
+    
+    vec4 basePosition = uWindowSpaceEmitterTransform * uPointEmitterCenter;
+    //vec4 basePosition = uPointEmitterCenter;
+    float posX = RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
+    float posY = RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
 
+    // need to normalize the outer limit (), but to do that we can't have a 1 in the w position 
+    // or else the X and Y's normalization get's messed up
+    // Note: Window space is on the range [-1,+1] on X and Y, hence the normalizing.
+    // Also Note: Anything with w = 1 is meant to be translated but not normalized, while any 
+    // vector with w = 0 is the reverse.
+    vec4 outerPosLimit = 0.1 * QuickNormalize(vec4(posX, posY, 0.0, 0.0));
+    vec4 posVariance = LinearMix(uPointEmitterCenter, outerPosLimit, 
+        RandomOnRange0To1(posVelSeed1));
+    pCopy._pos = basePosition + posVariance;
+    
+    // similar to the MinMaxVelocity::GetNew() on the CPU side
+    float velocityVariation = RandomOnRange0To1(posVelSeed2) * uDeltaParticleVelocity;
+    float velocityMagnitude = uMinParticleVelocity + velocityVariation;
+    float velX = RandomOnRangeNeg1ToPos1(velSeed1, velSeed2);
+    float velY = RandomOnRangeNeg1ToPos1(velSeed3, velSeed4);
+    vec4 randomVelocityVector = QuickNormalize(vec4(velX, velY, 0.0, 0.0));
+    pCopy._vel = randomVelocityVector * velocityMagnitude;
+    
     return pCopy;
 }
 
 
-uniform vec4 uBarP1;
-uniform vec4 uBarP2;
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Like PointEmitterResetPos(...), but for a bar emitter.
+Parameters:
+    p   A Particle instance.  
+Returns:
+    A Particle object with a random 2D velocity and a position randomly placed between the bar 
+    emitter's start and end point.
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
+uniform vec4 uBarEmitterP1;
+uniform vec4 uBarEmitterP2;
+Particle BarEmitterResetPos(Particle p)
+{
+    return p;
+}
 
-//// TODO: header
-//Particle BarEmitterReset(Particle p)
-//{
-//}
-
-uniform mat4 _windowSpaceRegionTransform;
-uniform mat4 _windowSpaceEmitterTransform;
+uniform float uDeltaTimeSec;
 
 
+/*-----------------------------------------------------------------------------------------------
+Description:
+    The compute shader's startup function.
+Parameters: None
+Returns:    None
+Creator: John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
 void main()
 {
-    // get the particle that this particular invocation will be working on
-    // Note: See explanation of the "work item number" layout for more detail.
     uint index = gl_GlobalInvocationID.x;
-    if (index < uParticleCount)
+    if (index < uMaxParticleCount)
     {
         Particle p = AllParticles[index];
 
-        // update position
         vec4 deltaPosition = p._vel * uDeltaTimeSec;
         p._pos = p._pos + deltaPosition;
 
@@ -338,20 +348,13 @@ void main()
             p = PointEmitterResetPos(p);
         }
 
-        //need multiple emitters
-        //need to make another shader for the particle updater (just do the one)
-        //need to make another shader for a circular particle region
-        //need to make another shader for a polygon particle region
-        //need to make another shader for a point emitter
-        //need to make another shader for a bar emitter
-        //need to only allow a set number of particle emitters
-        //need a uniform to say how many emitters there are 
-        //need to make a float uniform for each emitter with the fraction of the particles that each emitter will handle
-        //updating:
-        //- emitters are added on the CPU side and then copied to the GPU, so let fractional responsibilities be normalized there
-        //- let there be a buffer of counters, one for each emitter, that can be updated by each particle emission, thus allowing the particles to be spread out in a user-specified fraction amongst all the emitters (??can each update be seen by other work items? perhaps the "atomic counter"??)
+        // TODO: new algorithm with atomic counters for "particles emitted per emitter per frame":
+        // if (out of bounds) > set "is active" = 0
+        // if (atomic counter < max particles per frame this emitter) > reset particle to emitter in use
+        //??how to use an atomic counter??
+        // ??how to reset an atomic counter for a compute shader in use and not affect the already-dispatched compute shader??
 
-        // copy it back in
+
         AllParticles[index] = p;
     }
 }

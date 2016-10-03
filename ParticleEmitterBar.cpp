@@ -86,25 +86,3 @@ glm::vec4 ParticleEmitterBar::GetEmitDir() const
 {
     return _emitDir;
 }
-
-///*-----------------------------------------------------------------------------------------------
-//Description:
-//    Applies the transform to the emission direction and to the points that make up the bar.  The 
-//    emission direction is only rotated, while the bar points are rotated and translated.
-//Parameters:
-//    m       A 4x4 transform matrix.  Because glm transform functions only spit out a 4x4.
-//Returns:    None
-//Exception:  Safe
-//Creator:    John Cox (8-26-2016)
-//-----------------------------------------------------------------------------------------------*/
-//void ParticleEmitterBar::SetTransform(const glm::mat4 &m)
-//{
-//    _currentBarStart = glm::vec2(m * glm::vec4(_originalBarStart, 0.0f, 1.0f));
-//
-//    // "bar start to end" is relative to "bar start", so it can be rotated but not translated
-//    _currentBarStartToEnd = glm::vec2(m * glm::vec4(_originalBarStartToEnd, 0.0f, 0.0f));
-//
-//    // ditto for emission direction because it is relative to the bar
-//    glm::vec2 newEmissionDir = glm::vec2(m * glm::vec4(_originalEmitDirection, 0.0f, 0.0f));
-//    _velocityCalculator.SetDir(newEmissionDir);
-//}

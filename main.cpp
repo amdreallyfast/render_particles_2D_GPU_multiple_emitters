@@ -38,21 +38,10 @@
 
 // for basic OpenGL stuff
 #include "OpenGlErrorHandling.h"
-//#include "GenerateShader.h"
 #include "ShaderStorage.h"
 
-// for drawing shapes
-//#include "GeometryData.h"
-//#include "PrimitiveGeneration.h"
-
-// for particles and where they live
+// for particles, where they live, and how to update them
 #include "glm/vec2.hpp"
-//#include "ParticleRegionCircle.h"
-//#include "ParticleRegionPolygon.h"
-//#include "ParticleEmitterPoint.h"
-//#include "ParticleEmitterBar.h"
-//#include "ParticleStorage.h"
-//#include "ParticleUpdater.h"
 #include "ParticleSsbo.h"
 #include "PolygonSsbo.h"
 #include "ParticlePolygonComputeUpdater.h"
@@ -66,18 +55,11 @@
 #include "Stopwatch.h"
 
 Stopwatch gTimer;
-
 FreeTypeEncapsulated gTextAtlases;
 
 // in a bigger program, uniform locations would probably be stored in the same place as the 
 // shader programs
 GLint gUnifLocGeometryTransform;
-
-
-//// in a bigger program, geometry data would be stored in some kind of "scene" or in a renderer
-//// or behind door number 3 so that collision boxes could get at the vertex data
-//GeometryData gCircleGeometry;
-//GeometryData gPolygonGeometry;
 
 // ??stored in scene??
 ParticleSsbo gParticleBuffer;
@@ -87,12 +69,9 @@ PolygonSsbo gPolygonFaceBuffer;
 // geometry and the circle particle region, and ditto for the polygon
 glm::mat4 gRegionTransformMatrix;
 
-//// in a bigger program, ??where would particle stuff be stored??
-//IParticleRegion *gpParticleRegionCircle;
-//IParticleRegion *gpParticleRegionPolygon;
+// in a bigger program, ??where would particle stuff be stored??
 IParticleEmitter *gpParticleEmitterPoint;
 //IParticleEmitter *gpParticleEmitterBar;
-//ParticleUpdater gParticleUpdater;
 ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
 
 // divide between the circle and the polygon regions
@@ -100,7 +79,6 @@ ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
 // - 10,000 particles => ~60 fps on my computer
 // - 15,000 particles => 30-40 fps on my computer
 const unsigned int MAX_PARTICLE_COUNT = 15000;
-//ParticleStorage gParticleStorage;
 
 
 
@@ -118,12 +96,19 @@ static glm::vec2 RotateNeg90(const glm::vec2 &v)
     return glm::vec2(v.y, -(v.x));
 }
 
-// TODO: header
-// Manually (it's a demo, so eh?) generates a polygon centered around the window space origin (0,0) with corners at:
-// - vec2(-0.25f, -0.5f);
-// - vec2(+0.25f, -0.5f);
-// - vec2(+0.5f, +0.25f);
-// - vec2(-0.5f, +0.25f);
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Manually (it's a demo, so eh?) generates a polygon centered around the window space origin 
+    (0,0) with corners at:
+    - vec2(-0.25f, -0.5f);
+    - vec2(+0.25f, -0.5f);
+    - vec2(+0.5f, +0.25f);
+    - vec2(-0.5f, +0.25f);
+Parameters:
+    polygonFaceCollection   A pointer to the structure that needs to be filled out.
+Returns:    None
+Creator:    John Cox (9-25-2016)
+-----------------------------------------------------------------------------------------------*/
 static void GeneratePolygonRegion(std::vector<PolygonFace> *polygonFaceCollection)
 {
     glm::vec2 p1(-0.25f, -0.5f);
@@ -151,11 +136,8 @@ Description:
     Governs window creation, the initial OpenGL configuration (face culling, depth mask, even
     though this is a 2D demo and that stuff won't be of concern), the creation of geometry, and
     the creation of a texture.
-Parameters:
-    argc    (From main(...)) The number of char * items in argv.  For glut's initialization.
-    argv    (From main(...)) A collection of argument strings.  For glut's initialization.
-Returns:
-    False if something went wrong during initialization, otherwise true;
+Parameters: None
+Returns:    None
 Creator:    John Cox (3-7-2016)
 -----------------------------------------------------------------------------------------------*/
 void Init()
@@ -173,166 +155,61 @@ void Init()
     ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
 
     // FreeType initialization
-    shaderStorageRef.NewShader("freetype");
-    shaderStorageRef.AddShaderFile("freetype", "freeType.vert", GL_VERTEX_SHADER);
-    shaderStorageRef.AddShaderFile("freetype", "freeType.frag", GL_FRAGMENT_SHADER);
-    shaderStorageRef.LinkShader("freetype");
-    GLuint freeTypeProgramId = shaderStorageRef.GetShaderProgram("freetype");
+    std::string freeTypeShaderKey = "freetype";
+    shaderStorageRef.NewShader(freeTypeShaderKey);
+    shaderStorageRef.AddShaderFile(freeTypeShaderKey, "freeType.vert", GL_VERTEX_SHADER);
+    shaderStorageRef.AddShaderFile(freeTypeShaderKey, "freeType.frag", GL_FRAGMENT_SHADER);
+    shaderStorageRef.LinkShader(freeTypeShaderKey);
+    GLuint freeTypeProgramId = shaderStorageRef.GetShaderProgram(freeTypeShaderKey);
     gTextAtlases.Init("FreeSans.ttf", freeTypeProgramId);
 
-    
-    
     // for the particle compute shader stuff
     std::string computeShaderKey = "compute particles";
     shaderStorageRef.NewShader(computeShaderKey);
     //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleStructure.comp");
     //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleMain.comp");
-    
-    
-    
-    
-    //shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
-    shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion(nocomment).comp", GL_COMPUTE_SHADER);
-    
-    
-    
     //shaderStorageRef.CompileComputeShader("particleCompute");
-    //shaderStorageRef.LinkComputeShader("particleCompute");
+    shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
     shaderStorageRef.LinkShader(computeShaderKey);
-    //GLuint computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
-    //InitComputeShader(computeProgramId);
-    //gParticleComputeUpdater.Init(MAX_PARTICLE_COUNT, computeShaderKey);
 
-
-    
-    //// generate a circular particle region, point and bar particle emitters, and join them them in a particle updater
-    
-    // generate a point emitter and a polygon region
-
-
+    // a render shader specifically for the particles (particle color may change depending on 
+    // particle state, so it isn't the same as the geometry's render shader)
     std::string renderParticlesShaderKey = "render particles";
     shaderStorageRef.NewShader(renderParticlesShaderKey);
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.vert", GL_VERTEX_SHADER);
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.frag", GL_FRAGMENT_SHADER);
     shaderStorageRef.LinkShader(renderParticlesShaderKey);
 
-    //gParticleBuffer.Init(MAX_PARTICLE_COUNT, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
-
-    //// the circle starts centered on the origin and the translate matrix will move it
-    //// Note: The 1.0f makes it translatable.
-    //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
-    //gRegionTransformMatrix *= glm::rotate(glm::mat4(), 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-    //// circular particle region
-    //float circleRadius = 0.5f;
-    //glm::vec2 circleCenter = glm::vec2(0.0f, 0.0f);
-    //gpParticleRegionCircle = new ParticleRegionCircle(circleCenter, circleRadius);
-    //gpParticleRegionCircle->SetTransform(gRegionTransformMatrix);
-
-    //// polygon particle region
-    //std::vector<PolygonFace> polygonFaces;
-    //GeneratePolygonRegion(&polygonFaces);
-    //gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
-/*
-    polygonCorners.push_back(glm::vec2(-0.25f, -0.5f));
-    polygonCorners.push_back(glm::vec2(+0.25f, -0.5f));
-    polygonCorners.push_back(glm::vec2(+0.5f, +0.25f));
-    polygonCorners.push_back(glm::vec2(-0.5f, +0.25f));
-    gPolygonFaceBuffer.Init()
-    gpParticleRegionPolygon = new ParticleRegionPolygon(polygonCorners);
-    gpParticleRegionPolygon->SetTransform(gRegionTransformMatrix);*/
-
-
-    //// stick the point emitter in the geometric center of the polygon region
-    //// Note: Repeat points do exist, but the average will sort that out.
-    //float sumFaceX = 0.0f;
-    //float sumFaceY = 0.0f;
-    //for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
-    //{
-    //    const PolygonFace &pf = polygonFaces[faceIndex];
-    //    sumFaceX += pf._start.x + pf._end.x;
-    //    sumFaceY += pf._start.y + pf._end.y;
-    //}
-    //glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2), 
-    //    sumFaceY / (polygonFaces.size() / 2));
-    //gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
-    //gParticleComputeUpdater.AddEmitter(gpParticleEmitterPoint, 500);
-    //gpParticleEmitterPoint->SetTransform(gRegionTransformMatrix);
-
-    //// stick the emitter bar on the left side of the circle, have it emit right, and make the 
-    //// particles slow compared to the point emitter 
-    //// Note: Have to use vec4s instead of vec2s because glm::translate(...) only spits out mat4.
-    //glm::vec2 barP1 = glm::vec2(-0.2f, +0.1f);
-    //glm::vec2 barP2 = glm::vec2(-0.2f, -0.1f);
-    //glm::vec2 emitDirection(+1.0f, 0.0f);
-    //float minVel = 0.1f;
-    //float maxVel = 0.3f;
-    //gpParticleEmitterBar = new ParticleEmitterBar(barP1, barP2, emitDirection, minVel, maxVel);
-    //gpParticleEmitterBar->SetTransform(gRegionTransformMatrix);
-
-    //// stick the particle region and emitters into a single "updater" object
-    //gParticleStorage.Init(particleProgramId, MAX_PARTICLE_COUNT);
-    ////gParticleUpdater.SetRegion(gpParticleRegionCircle);
-    //gParticleUpdater.SetRegion(gpParticleRegionPolygon);
-    //gParticleUpdater.AddEmitter(gpParticleEmitterBar, 10);
-    //gParticleUpdater.AddEmitter(gpParticleEmitterPoint, 10);
-    //gParticleUpdater.ResetAllParticles(gParticleStorage._allParticles);
-    
-    // geometry for particle region borders
+    // a render shader specifically for the geometry (nothing special; just a transform, color 
+    // white, pass through to frag shader)
     std::string renderGeometryShaderKey = "render geometry";
     shaderStorageRef.NewShader(renderGeometryShaderKey);
     shaderStorageRef.AddShaderFile(renderGeometryShaderKey, "geometry.vert", GL_VERTEX_SHADER);
     shaderStorageRef.AddShaderFile(renderGeometryShaderKey, "geometry.frag", GL_FRAGMENT_SHADER);
     shaderStorageRef.LinkShader(renderGeometryShaderKey);
-    //GLuint geometryProgramId = shaderStorageRef.GetShaderProgram(renderGeometryShaderKey);
-
-    // polygon particle region
-    std::vector<PolygonFace> polygonFaces;
-    GeneratePolygonRegion(&polygonFaces);
-    
-    
-    // TODO: re-enable
-    //gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
-
-
-
-
-
     gUnifLocGeometryTransform = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "transformMatrixWindowSpace");
 
-    //// stick the point emitter in the geometric center of the polygon region
-    //// Note: Repeat points do exist, but the average will sort that out.
-    //float sumFaceX = 0.0f;
-    //float sumFaceY = 0.0f;
-    //for (size_t faceIndex = 0; faceIndex < polygonFaces.size(); faceIndex++)
-    //{
-    //    const PolygonFace &pf = polygonFaces[faceIndex];
-    //    sumFaceX += pf._start._position.x + pf._end._position.x;
-    //    sumFaceY += pf._start._position.y + pf._end._position.y;
-    //}
-    //glm::vec2 polygonRegionCenter(sumFaceX / (polygonFaces.size() * 2),
-    //    sumFaceY / (polygonFaces.size() / 2));
-    ////gpParticleEmitterPoint = new ParticleEmitterPoint(polygonRegionCenter, 0.3f, 0.5f);
-    
-    gpParticleEmitterPoint = new ParticleEmitterPoint(glm::vec2(), 0.3f, 0.5f);
-    gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
-    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint, 500);
+    // the polygon region
+    std::vector<PolygonFace> polygonFaces;
+    GeneratePolygonRegion(&polygonFaces);
+    gPolygonFaceBuffer.Init(polygonFaces, 
+        shaderStorageRef.GetShaderProgram(computeShaderKey),
+        shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
 
+    // stick the point emitter in the center of the polygon region (0,0)
+    gpParticleEmitterPoint = new ParticleEmitterPoint(glm::vec2(), 0.3f, 0.5f);
+
+    // start up the encapsulation of the CPU side of the computer shader
+    gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint, 100);
     std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
     gpParticleComputeUpdater->InitParticleCollection(allParticles);
 
-
-    //gParticleComputeUpdater.Init(MAX_PARTICLE_COUNT, computeShaderKey);
-
-    gParticleBuffer.Init(allParticles, shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
-    gPolygonFaceBuffer.Init(polygonFaces, shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
-    
-    //GenerateCircle(&gCircleGeometry, circleRadius, true);
-    //gCircleGeometry.Init(geometryProgramId);
-
-    //GeneratePolygonWireframe(&gPolygonGeometry, polygonCorners, false);
-    //gPolygonGeometry.Init(geometryProgramId);
-
+    // the particle buffer needs the particles to be initialized first by the compute updater's 
+    // InitParticleCollection(...)
+    gParticleBuffer.Init(allParticles, 
+        shaderStorageRef.GetShaderProgram(computeShaderKey),
+        shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
 
     // the timer will be used for framerate calculations
     gTimer.Init();
@@ -352,67 +229,31 @@ Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void Display()
 {
-
     // TODO: in rendering shader, if particle is not active (if necessary, turn on the vertex attrib pointers that account for it), then make it black so that it won't show up
-
-
-    //// TODO: apply these in the compute and render uniforms
-    //// the circle starts centered on the origin and the translate matrix will move it
-    //// Note: The 1.0f makes it translatable.
-    //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
-    //gRegionTransformMatrix *= glm::rotate(glm::mat4(), 10.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-
-
-
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // update all particle locations
 
-    // TODO: ??in the update method, bind both buffer bases to different binding points??
-
-
     glm::mat4 windowSpaceTransform = glm::rotate(glm::mat4(), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
-    //glm::mat4 windowSpaceTransform = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
 
-
-    //??why isn't it drawing anything??
-    //gParticleComputeUpdater.Update(MAX_PARTICLE_COUNT, 0.05f);
+    // the magic happens here
     gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
-
-
-
-    ////gParticleUpdater.Update(gParticleStorage._allParticles, 0, 
-    ////    gParticleStorage._allParticles.size(), 0.01f);
 
     // draw the particles
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
     glBindVertexArray(gParticleBuffer.VaoId());
-    //glBindBuffer(GL_ARRAY_BUFFER, gParticleStorage._arrayBufferId);
-    //glBufferSubData(GL_ARRAY_BUFFER, 0, gParticleStorage._sizeBytes, gParticleStorage._allParticles.data());
-    //glDrawArrays(gParticleStorage._drawStyle, 0, gParticleStorage._allParticles.size());
     glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
-
-
-
-
-
 
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
-    //gRegionTransformMatrix = glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
     glUniformMatrix4fv(gUnifLocGeometryTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
-
-    //TODO: re-enable
     glBindVertexArray(gPolygonFaceBuffer.VaoId());
     glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
 
-
     // draw the frame rate once per second in the lower left corner
-    // Note: The font textures' orgin is their lower left corner, so the "lower left" in screen 
-    // space is just above [-1.0f, -1.0f].
     GLfloat color[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
     char str[8];
     static int elapsedFramesPerSecond = 0;
@@ -427,6 +268,9 @@ void Display()
         elapsedTime -= 1.0f;
     }
     sprintf(str, "%.2lf", frameRate);
+
+    // Note: The font textures' orgin is their lower left corner, so the "lower left" in screen 
+    // space is just above [-1.0f, -1.0f].
     float xy[2] = { -0.99f, -0.99f };
     float scaleXY[2] = { 1.0f, 1.0f };
 
@@ -544,28 +388,6 @@ Creator:    John Cox (2-13-2016)
 void CleanupAll()
 {
     //// these deletion functions need the buffer ID, but they take a (void *) for the second 
-    //// argument in the event that the user has an array of IDs (legacy OpenGL stuff that isn't 
-    //// used much anymore, if at all), so pass in the buffer ID's address and tell it to delete 1
-    //// Note: The second argument is treated like an array, so if I were to pass in the address 
-    //// of a single GLuint and tell it to delete 2, then it will either (1) blow up or 
-    //// (2) silently delete something I didn't want.  Both are bad, so treat it nice.
-    //// Also Note: If I attempt to delete an ID that has already been deleted, that is ok.  OpenGL
-    //// will silently swallow that.
-    //glDeleteBuffers(1, &gCircleGeometry._arrayBufferId);
-    //glDeleteBuffers(1, &gCircleGeometry._elementBufferId);
-    //glDeleteVertexArrays(1, &gCircleGeometry._vaoId);
-    //glDeleteBuffers(1, &gPolygonGeometry._arrayBufferId);
-    //glDeleteBuffers(1, &gPolygonGeometry._elementBufferId);
-    //glDeleteVertexArrays(1, &gPolygonGeometry._vaoId);
-
-    //delete(gpParticleRegionCircle);
-    //delete(gpParticleRegionPolygon);
-
-
-
-
-
-    //delete(gpParticleEmitterBar);
     delete gpParticleEmitterPoint;
     delete gpParticleComputeUpdater;
 }

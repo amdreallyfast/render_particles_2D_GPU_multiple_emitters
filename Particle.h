@@ -21,6 +21,8 @@ struct Particle
     {
     }
 
+    // TODO: dd "previous position" too (for collision detection)
+
     // even though this is a 2D program, I wasn't able to figure out the byte misalignments 
     // between C++ and GLSL (every variable is aligned on a 16byte boundry, but adding 2-float 
     // padding to glm::vec2 didn't work and the compute shader just didn't send any particles 
