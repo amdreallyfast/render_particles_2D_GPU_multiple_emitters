@@ -50,6 +50,7 @@ private:
     int _unifLocBarP2;
     int _unifLocWindowSpaceRegionTransform;
     int _unifLocWindowSpaceEmitterTransform;
+    unsigned int _atomicCounterBuffer;
 
 
     // all the updating heavy lifting goes on in the compute shader, so CPU cache coherency is 

@@ -323,7 +323,7 @@ Particle BarEmitterResetPos(Particle p)
 }
 
 uniform float uDeltaTimeSec;
-
+layout (binding = 0, offset = 0) uniform atomic_uint ac;
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -339,23 +339,39 @@ void main()
     {
         Particle p = AllParticles[index];
 
-        vec4 deltaPosition = p._vel * uDeltaTimeSec;
-        p._pos = p._pos + deltaPosition;
-
-        // if it went out of bounds, reset it
-        if (ParticleOutOfBoundsPolygon(p))
+        if (p._isActive == 0)
         {
-            p = PointEmitterResetPos(p);
+            // only reactivate the particle if there is enough left in the particle limit for 
+            // this update
+            if (atomicCounterIncrement(ac) < 10)
+            {
+                p = PointEmitterResetPos(p);
+                p._isActive = 1;
+            }
         }
 
-        // TODO: new algorithm with atomic counters for "particles emitted per emitter per frame":
-        // if (out of bounds) > set "is active" = 0
-        // if (atomic counter < max particles per frame this emitter) > reset particle to emitter in use
-        //??how to use an atomic counter??
-        // ??how to reset an atomic counter for a compute shader in use and not affect the already-dispatched compute shader??
+        if (p._isActive == 1)
+        {
+            vec4 deltaPosition = p._vel * uDeltaTimeSec;
+            p._pos = p._pos + deltaPosition;
+
+            // if it went out of bounds, reset it
+            if (ParticleOutOfBoundsPolygon(p))
+            {
+                //p = PointEmitterResetPos(p);
+                p._isActive = 0;
+
+            }
+
+            // TODO: new algorithm with atomic counters for "particles emitted per emitter per frame":
+            // if (out of bounds) > set "is active" = 0
+            // if (atomic counter < max particles per frame this emitter) > reset particle to emitter in use
+            //??how to use an atomic counter??
+            // ??how to reset an atomic counter for a compute shader in use and not affect the already-dispatched compute shader??
 
 
-        AllParticles[index] = p;
+            AllParticles[index] = p;
+        }
     }
 }
 

@@ -34,6 +34,16 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     _unifLocDeltaParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaParticleVelocity");
 
     glUseProgram(_computeProgramId);
+
+    // courtesy of geeks3D
+    // http://www.geeks3d.com/20120309/opengl-4-2-atomic-counter-demo-rendering-order-of-fragments/
+    glGenBuffers(1, &_atomicCounterBuffer);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _atomicCounterBuffer);
+
+
     glUniform1ui(_unifLocParticleCount, numParticles);
     glUniform1ui(_unifLocPolygonFaceCount, numFaces);
     glUniform1f(_unifLocMinParticleVelocity, 0.3f);
@@ -162,6 +172,16 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
     // TODO: spread out the particles between multiple emitters.
 
     glUseProgram(_computeProgramId);
+
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
+    GLuint atomicCounterVal = 0;
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterVal);
+    //GLuint *ptr = (GLuint *)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
+    //    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+    //*ptr = 0;
+    //glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
     glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
     glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
     glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));

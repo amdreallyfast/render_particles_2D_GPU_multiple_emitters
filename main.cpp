@@ -147,6 +147,9 @@ void Init()
     glFrontFace(GL_CCW);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glDepthRange(0.0f, 1.0f);
@@ -242,16 +245,16 @@ void Display()
     // the magic happens here
     gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
 
-    // draw the particles
-    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
-    glBindVertexArray(gParticleBuffer.VaoId());
-    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
-
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     glUniformMatrix4fv(gUnifLocGeometryTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
     glBindVertexArray(gPolygonFaceBuffer.VaoId());
     glDrawArrays(GL_LINES, 0, gPolygonFaceBuffer.NumVertices());
+
+    // draw the particles
+    glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
+    glBindVertexArray(gParticleBuffer.VaoId());
+    glDrawArrays(gParticleBuffer.DrawStyle(), 0, gParticleBuffer.NumVertices());
 
     // draw the frame rate once per second in the lower left corner
     GLfloat color[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
