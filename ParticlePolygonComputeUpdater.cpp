@@ -34,20 +34,23 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     _unifLocDeltaParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaParticleVelocity");
 
     glUseProgram(_computeProgramId);
-
-    // courtesy of geeks3D
-    // http://www.geeks3d.com/20120309/opengl-4-2-atomic-counter-demo-rendering-order-of-fragments/
-    glGenBuffers(1, &_atomicCounterBuffer);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), 0, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _atomicCounterBuffer);
-
-
     glUniform1ui(_unifLocParticleCount, numParticles);
     glUniform1ui(_unifLocPolygonFaceCount, numFaces);
     glUniform1f(_unifLocMinParticleVelocity, 0.3f);
     glUniform1f(_unifLocDeltaParticleVelocity, 0.5f);
+
+    // courtesy of geeks3D (and my use of glBufferData(...) instead of glMapBuffer(...)
+    // http://www.geeks3d.com/20120309/opengl-4-2-atomic-counter-demo-rendering-order-of-fragments/
+    glGenBuffers(1, &_atomicCounterBuffer);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
+    GLuint atomicCounterResetVal = 0;
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), (void *)&atomicCounterResetVal, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _atomicCounterBuffer);
+
+    // it seems that atomic counters must be bound where they are declared and cannot be bound 
+    // as the ParticleSsbo and PolygonSsbo
+
     glUseProgram(0);
 
     // these are also constant through the program, but won't get set until the emitters are 
@@ -174,12 +177,8 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
     glUseProgram(_computeProgramId);
 
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
-    GLuint atomicCounterVal = 0;
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterVal);
-    //GLuint *ptr = (GLuint *)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
-    //    GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
-    //*ptr = 0;
-    //glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+    GLuint atomicCounterResetVal = 0;
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
     glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);

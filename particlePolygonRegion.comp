@@ -323,6 +323,10 @@ Particle BarEmitterResetPos(Particle p)
 }
 
 uniform float uDeltaTimeSec;
+
+// unlike the ParticleBuffer and FaceBuffer, atomic counter buffers seem to need a declaration 
+// like this and cannot be bound dynamically as in ParticleSsbo and PolygonSsbo
+// Note: Discovered by experience and through this: https://www.opengl.org/wiki/Atomic_Counter.
 layout (binding = 0, offset = 0) uniform atomic_uint ac;
 
 /*-----------------------------------------------------------------------------------------------
@@ -358,9 +362,7 @@ void main()
             // if it went out of bounds, reset it
             if (ParticleOutOfBoundsPolygon(p))
             {
-                //p = PointEmitterResetPos(p);
                 p._isActive = 0;
-
             }
 
             // TODO: new algorithm with atomic counters for "particles emitted per emitter per frame":

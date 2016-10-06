@@ -147,13 +147,26 @@ void Init()
     glFrontFace(GL_CCW);
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
     glDepthRange(0.0f, 1.0f);
 
+    // inactive particle Z = -0.6   alpha = 0
+    // active particle Z = -0.7     alpha = 1
+    // polygon fragment Z = -0.8    alpha = 1
+    // Note: The blend function is done via glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA).  
+    // The first argument is the scale factor for the source color (presumably the existing 
+    // fragment color in the frame buffer) and the second argument is the scale factor for the 
+    // destination color (presumably the color of the fragment that is being added).  The second 
+    // argument ("one minus source alpha") means that, when any color is being added, the 
+    // resulting color will be "(existingFragmentAlpha * existingFragmentColor) - 
+    // (addedFragmentAlpha * addedFragmentColor)".  
+    // Also Note: If the color furthest from the camera is black (vec4(0,0,0,0)), then any 
+    // color on top of it will end up as (using the equation) "vec4(0,0,0,0) - whatever", which 
+    // is clamped at 0.  So put the opaque (alpha=1) furthest from the camera (this demo is 2D, 
+    // so make it a lower Z).  The depth range is 0-1, so the lower Z limit is -1.
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
 
@@ -232,7 +245,6 @@ Creator:    John Cox (2-13-2016)
 -----------------------------------------------------------------------------------------------*/
 void Display()
 {
-    // TODO: in rendering shader, if particle is not active (if necessary, turn on the vertex attrib pointers that account for it), then make it black so that it won't show up
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

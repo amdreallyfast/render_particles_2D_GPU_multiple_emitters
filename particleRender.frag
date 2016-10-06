@@ -10,6 +10,5 @@ out vec4 finalFragColor;
 
 void main()
 {
-    //finalFragColor = vec4(particleColor, 1.0f);
     finalFragColor = particleColor;
 }
