@@ -43,6 +43,15 @@ private:
     int _unifLocParticleOffsetCount;
     int _unifLocPolygonFaceCount;
     int _unifLocDeltaTimeSec;
+    int _unifLocMaxParticleEmitCount;
+
+
+    int _unifLocUsePointEmitter;
+    int _unifLocOnlyResetParticles;     // as opposed to updating position
+
+
+
+
     int _unifLocPointEmitterCenter;
     int _unifLocMinParticleVelocity;
     int _unifLocDeltaParticleVelocity;

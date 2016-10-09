@@ -111,10 +111,10 @@ Creator:    John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 static void GeneratePolygonRegion(std::vector<PolygonFace> *polygonFaceCollection)
 {
-    glm::vec2 p1(-0.25f, -0.5f);
-    glm::vec2 p2(+0.25f, -0.5f);
-    glm::vec2 p3(+0.5f, +0.25f);
-    glm::vec2 p4(-0.5f, +0.25f);
+    glm::vec2 p1(-0.5f, -0.75f);
+    glm::vec2 p2(+0.5f, -0.75f);
+    glm::vec2 p3(+0.75f, +0.5f);
+    glm::vec2 p4(-0.75f, +0.5f);
     glm::vec2 n1(RotateNeg90(p2 - p1));
     glm::vec2 n2(RotateNeg90(p3 - p2));
     glm::vec2 n3(RotateNeg90(p4 - p3));

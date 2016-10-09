@@ -67,6 +67,8 @@ Description:
 Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 uniform uint uMaxParticleCount;
+
+// TODO: delete offset
 uniform uint uParticleOffsetCount;  // used with multiple emitters working on different particles
 layout (std430) buffer ParticleBuffer
 {
@@ -324,6 +326,13 @@ Particle BarEmitterResetPos(Particle p)
 
 uniform float uDeltaTimeSec;
 
+// this value is used to prevent uMaxParticleCount particles from being emitted all at once
+// Note: This is used when the particles are spread out on multiple emitters.
+uniform uint uMaxParticleEmitCount;
+
+uniform uint uUsePointEmitter;
+uniform uint uOnlyResetParticles;
+
 // unlike the ParticleBuffer and FaceBuffer, atomic counter buffers seem to need a declaration 
 // like this and cannot be bound dynamically as in ParticleSsbo and PolygonSsbo
 // Note: Discovered by experience and through this: https://www.opengl.org/wiki/Atomic_Counter.
@@ -339,41 +348,55 @@ Creator: John Cox (9-25-2016)
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
+    //uint index = gl_GlobalInvocationID.x + uParticleOffsetCount;
     if (index < uMaxParticleCount)
     {
         Particle p = AllParticles[index];
+        //Particle p = AllParticles[index + uParticleOffsetCount];
 
-        if (p._isActive == 0)
+        //if (p._isActive == 0) 
+        if (uOnlyResetParticles == 1)
+        //if (5 < 10)
         {
-            // only reactivate the particle if there is enough left in the particle limit for 
-            // this update
-            if (atomicCounterIncrement(ac) < 10)
+            if (p._isActive == 0)
             {
-                p = PointEmitterResetPos(p);
-                p._isActive = 1;
+                // only reactivate the particle if there is enough left in the particle limit for 
+                // this update
+                //if (atomicCounterIncrement(ac) < 10)
+                if (atomicCounterIncrement(ac) < uMaxParticleEmitCount)
+                {
+                    if (uUsePointEmitter == 1)
+                    {
+                        // use the point emitter with whatever point was uploaded
+                        p = PointEmitterResetPos(p);
+                    }
+                    else
+                    {
+                        // use bar emitter
+                    }
+                
+                    p._isActive = 1;
+                }
+            }
+        }
+        else
+        {
+            // only update active particles 
+            if (p._isActive == 1)
+            {
+                vec4 deltaPosition = p._vel * uDeltaTimeSec;
+                p._pos = p._pos + deltaPosition;
+
+                // if it went out of bounds, reset it
+                if (ParticleOutOfBoundsPolygon(p))
+                {
+                    //p = PointEmitterResetPos(p);
+                    p._isActive = 0;
+                }                
             }
         }
 
-        if (p._isActive == 1)
-        {
-            vec4 deltaPosition = p._vel * uDeltaTimeSec;
-            p._pos = p._pos + deltaPosition;
-
-            // if it went out of bounds, reset it
-            if (ParticleOutOfBoundsPolygon(p))
-            {
-                p._isActive = 0;
-            }
-
-            // TODO: new algorithm with atomic counters for "particles emitted per emitter per frame":
-            // if (out of bounds) > set "is active" = 0
-            // if (atomic counter < max particles per frame this emitter) > reset particle to emitter in use
-            //??how to use an atomic counter??
-            // ??how to reset an atomic counter for a compute shader in use and not affect the already-dispatched compute shader??
-
-
-            AllParticles[index] = p;
-        }
+        AllParticles[index] = p;
     }
 }
 

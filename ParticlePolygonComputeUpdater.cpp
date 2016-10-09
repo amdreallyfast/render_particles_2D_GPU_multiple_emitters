@@ -61,6 +61,9 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
 
     // these are updated during Update(...)
     _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
+    _unifLocMaxParticleEmitCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleEmitCount");
+    _unifLocUsePointEmitter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uUsePointEmitter");
+    _unifLocOnlyResetParticles = shaderStorageRef.GetUniformLocation(computeShaderKey, "uOnlyResetParticles");
     _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceRegionTransform");
     _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceEmitterTransform");
 
@@ -173,28 +176,76 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
     }
 
     // TODO: spread out the particles between multiple emitters.
+    unsigned int particlesPerEmitterThisFrame = 10;
+    unsigned int particleIndexOffset = 0;
 
+    // constant throughout the update
     glUseProgram(_computeProgramId);
-
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
-    GLuint atomicCounterResetVal = 0;
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-
     glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
     glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
     glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
 
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
+    GLuint atomicCounterResetVal = 0;
+
+    // reset everything necessary to control the emission parameters for this emitter
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+    //glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
+    //glUniform1ui(_unifLocParticleOffsetCount, particleIndexOffset);
+    glUniform1ui(_unifLocMaxParticleEmitCount, 10);
+    glUniform1ui(_unifLocParticleOffsetCount, 0);
+    glUniform1ui(_unifLocUsePointEmitter, 1);
+    glUniform1ui(_unifLocOnlyResetParticles, 1);
+
+
+    //glUniform1ui(_unifLocParticleOffsetCount, 10);
+    //glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+    //glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+
     // an array will not assume data order in glm's vec4
     glm::vec4 emitterPos = _pointEmitters[0]->GetPos();
-    float emittertPosArr[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
-    glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr);
+    float emittertPosArr1[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
+    glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr1);
 
     // read the explanation in particlePolygonRegion.comp for why these are computed this way
     GLuint numWorkGroupsX = (_totalParticleCount / 256) + 1;
     GLuint numWorkGroupsY = 1;
     GLuint numWorkGroupsZ = 1;
     glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+    float emittertPosArr2[4] = { emitterPos.x - 0.25f, emitterPos.y - 0.25f, emitterPos.z, emitterPos.w };
+    glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr2);
+    glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+    glUniform1ui(_unifLocOnlyResetParticles, 0);
+    glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+
+    //// now for the next emitter
+    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+    //particleIndexOffset += particlesPerEmitterThisFrame;
+    ////glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
+    ////glUniform1ui(_unifLocParticleOffsetCount, particleIndexOffset);
+    //glUniform1ui(_unifLocMaxParticleEmitCount, 0);
+    //glUniform1ui(_unifLocParticleOffsetCount, 20);
+
+    //// do it again
+    //glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+    //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+    //// now for the next emitter
+    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+    //glUniform1ui(_unifLocMaxParticleEmitCount, 0);
+    //glUniform1ui(_unifLocParticleOffsetCount, 40);
+
+    //// do it again
+    //glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+
+
 
     // tell the GPU:
     // (1) Accesses to the shader buffer after this call will reflect writes prior to the 
@@ -205,5 +256,6 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
     // cleanup
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
     glUseProgram(0);
 }
