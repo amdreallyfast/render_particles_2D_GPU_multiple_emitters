@@ -39,12 +39,21 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     glGenBuffers(1, &_atomicCounterBuffer);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
     GLuint atomicCounterResetVal = 0;
+
+    // the contents of this buffer will be read repeatedly during "update" and used to record 
+    // how many particles are "active"
     glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), (void *)&atomicCounterResetVal, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _atomicCounterBuffer);
 
     // it seems that atomic counters must be bound where they are declared and cannot be bound 
-    // as the ParticleSsbo and PolygonSsbo
+    // dynamically like the ParticleSsbo and PolygonSsbo
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _atomicCounterBuffer);
+
+    // the atomic counter copy buffer follows suit
+    glGenBuffers(1, &_atomicCounterCopyBuffer);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, _atomicCounterCopyBuffer);
+    glBufferData(GL_COPY_WRITE_BUFFER, sizeof(GLuint), 0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 
     glUseProgram(0);
 
@@ -64,6 +73,19 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceRegionTransform");
     _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceEmitterTransform");
 
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Cleans up buffers that were allocated in this object.
+Parameters: None
+Returns:    None
+Creator:    John Cox (10-10-2016)
+-----------------------------------------------------------------------------------------------*/
+ParticlePolygonComputeUpdater::~ParticlePolygonComputeUpdater()
+{
+    glDeleteBuffers(1, &_atomicCounterBuffer);
+    glDeleteBuffers(1, &_atomicCounterCopyBuffer);
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -153,6 +175,12 @@ void ParticlePolygonComputeUpdater::InitParticleCollection(std::vector<Particle>
     }
 }
 
+
+static unsigned int GetAtomicCounterVal()
+{
+
+}
+
 /*-----------------------------------------------------------------------------------------------
 Description:
     Summons the compute shader.
@@ -173,21 +201,21 @@ Description:
 Parameters:
     numParticles    Used to compute the number of work groups.
     deltatimeSec        Self-explanatory
-Returns:    None
-Creator:    John Cox (7-4-2016)
+Returns:    
+    The number (unsigned int) of active particles.
+Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
-void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, 
+unsigned int ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, 
     const glm::mat4 &windowSpaceTransform) const
 {
     if (_pointEmitters.empty() && _barEmitters.empty())
     {
         // nothing to do
-        return;
+        return 0;
     }
 
-    // it seems to run through just about all particles if the numerator is 1/10 of the max 
-    // particle count (at least for this demo)
-    unsigned int particlesPerEmitterThisFrame = 50 / (_pointEmitters.size() + _barEmitters.size()); 
+    // adjust this until it seems to stabilize at a high fraction of the total particle count
+    unsigned int particlesPerEmitterThisFrame = 200 / (_pointEmitters.size() + _barEmitters.size()); 
 
     // spreading the particles evenly between multiple emitters is done by letting all the 
     // particle emitters have a go at all the inactive particles one by one, so all particles 
@@ -260,7 +288,8 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec,
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
 
-    // position update
+    // position update for all active particles
+    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
     glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
     glUniform1ui(_unifLocOnlyResetParticles, 0);
     glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
@@ -269,4 +298,19 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec,
     // cleanup
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
     glUseProgram(0);
+
+    // now that all active particles have updated, check how many active particles exist 
+    // Note: Thanks to this post for prompting me to learn about buffer copying to solve this 
+    // "extract atomic counter from compute shader" issue.
+    // (http://gamedev.stackexchange.com/questions/93726/what-is-the-fastest-way-of-reading-an-atomic-counter) 
+    glBindBuffer(GL_COPY_READ_BUFFER, _atomicCounterBuffer);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, _atomicCounterCopyBuffer);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLuint));
+    unsigned int *ptr = (GLuint*)glMapBufferRange(GL_COPY_WRITE_BUFFER, 0, sizeof(GLuint), GL_MAP_READ_BIT);
+    unsigned int numActiveParticles = *ptr;
+    glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+    return numActiveParticles;
 }

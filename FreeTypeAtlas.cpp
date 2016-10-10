@@ -547,11 +547,20 @@ void FreeTypeAtlas::RenderText(const std::string &str, const float posScreenCoor
         glyphOriginY += _glyphCharInfo[c].ay * oneOverScreenPixelHeight;
     }
 
-    // the vertex buffer's size is dependent upon string length, and in this demo that value is 
-    // not constant, so the vertex data needs to be completely refreshed every draw call, and 
-    // therefore glBufferData(...) is used instead of glBufferSubData(...) 
-    glBufferData(GL_ARRAY_BUFFER, glyphBoxes.size() * sizeof(point), glyphBoxes.data(),
-        GL_DYNAMIC_DRAW);
+    // load up the data, and only reallocate if you need too
+    static unsigned int maxBufferSizeBytes = 0;
+    int numBytes = glyphBoxes.size() * sizeof(point);
+    if (numBytes > maxBufferSizeBytes)
+    {
+        // give a little more space than is necessary
+        maxBufferSizeBytes = numBytes + 5;
+        glBufferData(GL_ARRAY_BUFFER, maxBufferSizeBytes, glyphBoxes.data(), GL_DYNAMIC_DRAW);
+    }
+    else
+    {
+        // buffer already big enough
+        glBufferSubData(GL_ARRAY_BUFFER, 0, numBytes, glyphBoxes.data());
+    }
 
     // use these vertex attributes
     glBindVertexArray(_vaoId);

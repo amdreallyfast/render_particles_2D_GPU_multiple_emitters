@@ -407,6 +407,10 @@ void main()
             // only update active particles 
             if (p._isActive == 1)
             {
+                // when the compute shader is summoned to update active particles, this counter 
+                // will give a count of how many active particles exist
+                atomicCounterIncrement(ac);
+
                 vec4 deltaPosition = p._vel * uDeltaTimeSec;
                 p._pos = p._pos + deltaPosition;
 

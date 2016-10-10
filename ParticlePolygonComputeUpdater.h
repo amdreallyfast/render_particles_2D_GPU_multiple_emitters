@@ -26,11 +26,12 @@ class ParticlePolygonComputeUpdater
 public:
     ParticlePolygonComputeUpdater(unsigned int numParticles, unsigned int numFaces, 
         const std::string &computeShaderKey);
+    ~ParticlePolygonComputeUpdater();
 
     bool AddEmitter(const IParticleEmitter *pEmitter);
     void InitParticleCollection(std::vector<Particle> &initThis);
 
-    void Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const;
+    unsigned int Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const;
 
 private:
     unsigned int _totalParticleCount;
@@ -53,7 +54,24 @@ private:
     int _unifLocBarEmitDir;
     int _unifLocWindowSpaceRegionTransform;
     int _unifLocWindowSpaceEmitterTransform;
+    
+    // the atomic counter is used to 
+    // (1) enforce the number of emitted particles per emitter per frame and 
+    // (2) count how many particles are currently active
+    // Note: The atomic counter, as fast as it is, doesn't seem to fully enforce the number of 
+    // emitted particles per emitter per frame.  During experiments, when the emit restriction 
+    // was 6, debugging showed that the first emitter spit out 92.  This varies by experiment, 
+    // of course, but the point is that compute shaders are so fast that many processors can get 
+    // to the same atomic counter check at the same time.  So this only sort of enforces the 
+    // limit.
+    // Also Note: The copy buffer is necessary to avoid trashing OpenGL's beautifully 
+    // synchronized pipeline.  Experiments showed that, after particle updating, mapping a 
+    // pointer to the atomic counter dropped frame rates from ~60fps -> ~3fps.  Ouch.  But now 
+    // I've learned about buffer copying, so now the buffer mapping happens on a buffer that is 
+    // not part of the compute shader's pipeline, and frame rates are back up to ~60fps.  
+    // Lovely :)
     unsigned int _atomicCounterBuffer;
+    unsigned int _atomicCounterCopyBuffer;
 
 
     // all the updating heavy lifting goes on in the compute shader, so CPU cache coherency is 

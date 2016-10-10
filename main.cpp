@@ -306,7 +306,8 @@ void Display()
     windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(-0.1f, -0.05f, 0.0f));
 
     // the magic happens here
-    gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
+    unsigned int numActiveParticles = 
+        gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
 
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
@@ -321,7 +322,7 @@ void Display()
 
     // draw the frame rate once per second in the lower left corner
     GLfloat color[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
-    char str[8];
+    char str[32];
     static int elapsedFramesPerSecond = 0;
     static double elapsedTime = 0.0;
     static double frameRate = 0.0;
@@ -343,6 +344,12 @@ void Display()
     // the first time that "get shader program" runs, it will load the atlas
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("freetype"));
     gTextAtlases.GetAtlas(48)->RenderText(str, xy, scaleXY, color);
+
+    // now show number of active particles
+    // Note: For some reason, lower case "i" seems to appear too close to the other letters.
+    sprintf(str, "active: %d", numActiveParticles);
+    float numActiveParticlesXY[2] = { -0.99f, +0.7f };
+    gTextAtlases.GetAtlas(48)->RenderText(str, numActiveParticlesXY, scaleXY, color);
 
     // clean up bindings
     glUseProgram(0);
