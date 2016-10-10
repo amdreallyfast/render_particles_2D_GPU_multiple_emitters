@@ -70,7 +70,10 @@ PolygonSsbo gPolygonFaceBuffer;
 glm::mat4 gRegionTransformMatrix;
 
 // in a bigger program, ??where would particle stuff be stored??
-IParticleEmitter *gpParticleEmitterPoint;
+IParticleEmitter *gpParticleEmitterPoint1 = 0;
+IParticleEmitter *gpParticleEmitterPoint2 = 0;
+IParticleEmitter *gpParticleEmitterPoint3 = 0;
+IParticleEmitter *gpParticleEmitterPoint4 = 0;
 //IParticleEmitter *gpParticleEmitterBar;
 ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
 
@@ -78,7 +81,7 @@ ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
 // Note: 
 // - 10,000 particles => ~60 fps on my computer
 // - 15,000 particles => 30-40 fps on my computer
-const unsigned int MAX_PARTICLE_COUNT = 15000;
+const unsigned int MAX_PARTICLE_COUNT = 100000;
 
 
 
@@ -212,12 +215,21 @@ void Init()
         shaderStorageRef.GetShaderProgram(computeShaderKey),
         shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
 
-    // stick the point emitter in the center of the polygon region (0,0)
-    gpParticleEmitterPoint = new ParticleEmitterPoint(glm::vec2(), 0.3f, 0.5f);
+    // scatter the point emitters around the center of the polygon region
+    // Note: Take into account that GeneratePolygonRegion(...) generates a polygon that covers 
+    // at least (-0.5f,-0.5f) to (+0.5f,+0.5f).
+    //gpParticleEmitterPoint1 = new ParticleEmitterPoint(glm::vec2(), 0.3f, 0.5f);
+    gpParticleEmitterPoint1 = new ParticleEmitterPoint(glm::vec2(-0.3f, -0.3f), 0.3f, 0.5f);
+    gpParticleEmitterPoint2 = new ParticleEmitterPoint(glm::vec2(-0.3f, +0.3f), 0.3f, 0.5f);
+    gpParticleEmitterPoint3 = new ParticleEmitterPoint(glm::vec2(+0.3f, -0.3f), 0.3f, 0.5f);
+    gpParticleEmitterPoint4 = new ParticleEmitterPoint(glm::vec2(+0.3f, +0.3f), 0.3f, 0.5f);
 
     // start up the encapsulation of the CPU side of the computer shader
     gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
-    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint, 100);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint1);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint2);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint3);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint4);
     std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
     gpParticleComputeUpdater->InitParticleCollection(allParticles);
 
@@ -403,7 +415,10 @@ Creator:    John Cox (2-13-2016)
 void CleanupAll()
 {
     //// these deletion functions need the buffer ID, but they take a (void *) for the second 
-    delete gpParticleEmitterPoint;
+    delete gpParticleEmitterPoint1;
+    delete gpParticleEmitterPoint2;
+    delete gpParticleEmitterPoint3;
+    delete gpParticleEmitterPoint4;
     delete gpParticleComputeUpdater;
 }
 

@@ -28,7 +28,6 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
 
     // these are constant through the program
     _unifLocParticleCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleCount");
-    _unifLocParticleOffsetCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleOffsetCount");
     _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
     _unifLocMinParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMinParticleVelocity");
     _unifLocDeltaParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaParticleVelocity");
@@ -78,16 +77,15 @@ Description:
     If, for some reason, the particle emitter cannot be cast to either a point emitter or a bar 
     emitter, then the emitter will not be added to either particle emitter collection and 
     "false" is returned. 
+
+    Note: Particles are evenly split between all emitters.
 Parameters:
     pEmitter    A pointer to a "particle emitter" interface.
-    maxParticlesEmittedPerFrame     A restriction on the provided emitter to prevent all 
-                                    particles from being emitted at once.
 Returns:    
     True if the emitter was added, otherwise false.
 Creator:    John Cox (9-18-2016)
 -----------------------------------------------------------------------------------------------*/
-bool ParticlePolygonComputeUpdater::AddEmitter(const IParticleEmitter *pEmitter,
-    const int maxParticlesEmittedPerFrame)
+bool ParticlePolygonComputeUpdater::AddEmitter(const IParticleEmitter *pEmitter)
 {
     const ParticleEmitterPoint *pointEmitter = 
         dynamic_cast<const ParticleEmitterPoint *>(pEmitter);
@@ -110,10 +108,13 @@ bool ParticlePolygonComputeUpdater::AddEmitter(const IParticleEmitter *pEmitter,
 
 /*-----------------------------------------------------------------------------------------------
 Description:
-    Particles init with 0 values and GLSL doesn't have a random() function.  This demo has 
-    instead used a random hash function that is quite chaotic but relies on the particles 
-    having non-zero velocities.  If all the particles start with velocities of 0, then the hash 
-    won't work.  This method gives the particle collection initial values.
+    Gives the particle collection initial values.  The particles are initialized evenly between 
+    between all emitters.
+    
+    Note: This function is necessary because particles init with 0 values and GLSL doesn't have 
+    a random() function.  This demo has instead used a random hash function that is quite 
+    chaotic but relies on the particles having non-zero velocities.  If all the particles start 
+    with velocities of 0, then the hash won't work.  
 Parameters:
     initThis    A non-const reference to the particle collection that needs to be initialized.
 Returns:    None
@@ -121,8 +122,6 @@ Creator:    John Cox, 9-25-2016
 -----------------------------------------------------------------------------------------------*/
 void ParticlePolygonComputeUpdater::InitParticleCollection(std::vector<Particle> &initThis)
 {
-    // spread out the random velocities between each emitter
-    unsigned int totalEmitters = _pointEmitters.size() + _barEmitters.size();
     unsigned int totalParticles = initThis.size();
 
     for (size_t particleCount = 0; particleCount < totalParticles; )
@@ -175,77 +174,53 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
         return;
     }
 
-    // TODO: spread out the particles between multiple emitters.
-    unsigned int particlesPerEmitterThisFrame = 10;
-    unsigned int particleIndexOffset = 0;
+    // it seems to run through just about all particles if the numerator is 1/10 of the max 
+    // particle count (at least for this demo)
+    unsigned int particlesPerEmitterThisFrame = 1000 / (_pointEmitters.size() + _barEmitters.size()); 
 
-    // constant throughout the update
-    glUseProgram(_computeProgramId);
-    glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
-    glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
-    glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
-
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
-    GLuint atomicCounterResetVal = 0;
-
-    // reset everything necessary to control the emission parameters for this emitter
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-    //glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
-    //glUniform1ui(_unifLocParticleOffsetCount, particleIndexOffset);
-    glUniform1ui(_unifLocMaxParticleEmitCount, 10);
-    glUniform1ui(_unifLocParticleOffsetCount, 0);
-    glUniform1ui(_unifLocUsePointEmitter, 1);
-    glUniform1ui(_unifLocOnlyResetParticles, 1);
-
-
-    //glUniform1ui(_unifLocParticleOffsetCount, 10);
-    //glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
-    //glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
-
-    // an array will not assume data order in glm's vec4
-    glm::vec4 emitterPos = _pointEmitters[0]->GetPos();
-    float emittertPosArr1[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
-    glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr1);
-
-    // read the explanation in particlePolygonRegion.comp for why these are computed this way
+    // spreading the particles evenly between multiple emitters is done by letting all the 
+    // particle emitters have a go at all the inactive particles one by one, so all particles 
+    // must be considered
     GLuint numWorkGroupsX = (_totalParticleCount / 256) + 1;
     GLuint numWorkGroupsY = 1;
     GLuint numWorkGroupsZ = 1;
-    glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
-    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-    float emittertPosArr2[4] = { emitterPos.x - 0.25f, emitterPos.y - 0.25f, emitterPos.z, emitterPos.w };
-    glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr2);
-    glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    // constant throughout the update
+    glUseProgram(_computeProgramId);
+    glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+    glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+    glUniform1ui(_unifLocOnlyResetParticles, 1);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
+    GLuint atomicCounterResetVal = 0;
+    glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
 
+    glUniform1ui(_unifLocUsePointEmitter, 1);
+    for (size_t pointEmitterCount = 0; pointEmitterCount < _pointEmitters.size(); pointEmitterCount++)
+    {
+        // reset everything necessary to control the emission parameters for this emitter
+        glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+        glm::vec4 emitterPos = _pointEmitters[pointEmitterCount]->GetPos();
+        float emittertPosArr[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
+        glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr);
+
+        // compute ALL the resets!
+        glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    }
+
+    // again for any bar emitters
+    //for (size_t barEmitterCount = 0; barEmitterCount < _barEmitters.size(); barEmitterCount++)
+    //{
+    //    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+    //    //glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
+    //    glUniform1ui(_unifLocUsePointEmitter, 0);
+    //}
+
+    // now update particle positions based on their velocity and delta time
+    glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
     glUniform1ui(_unifLocOnlyResetParticles, 0);
     glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-
-    //// now for the next emitter
-    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-    //particleIndexOffset += particlesPerEmitterThisFrame;
-    ////glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
-    ////glUniform1ui(_unifLocParticleOffsetCount, particleIndexOffset);
-    //glUniform1ui(_unifLocMaxParticleEmitCount, 0);
-    //glUniform1ui(_unifLocParticleOffsetCount, 20);
-
-    //// do it again
-    //glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-    //glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-    //// now for the next emitter
-    //glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-    //glUniform1ui(_unifLocMaxParticleEmitCount, 0);
-    //glUniform1ui(_unifLocParticleOffsetCount, 40);
-
-    //// do it again
-    //glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-
-
 
     // tell the GPU:
     // (1) Accesses to the shader buffer after this call will reflect writes prior to the 

@@ -27,7 +27,7 @@ public:
     ParticlePolygonComputeUpdater(unsigned int numParticles, unsigned int numFaces, 
         const std::string &computeShaderKey);
 
-    bool AddEmitter(const IParticleEmitter *pEmitter, const int maxParticlesEmittedPerFrame);
+    bool AddEmitter(const IParticleEmitter *pEmitter);
     void InitParticleCollection(std::vector<Particle> &initThis);
 
     void Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const;
@@ -40,18 +40,11 @@ private:
 
     // unlike most OpeGL IDs, uniform locations are GLint
     int _unifLocParticleCount;
-    int _unifLocParticleOffsetCount;
     int _unifLocPolygonFaceCount;
     int _unifLocDeltaTimeSec;
     int _unifLocMaxParticleEmitCount;
-
-
     int _unifLocUsePointEmitter;
     int _unifLocOnlyResetParticles;     // as opposed to updating position
-
-
-
-
     int _unifLocPointEmitterCenter;
     int _unifLocMinParticleVelocity;
     int _unifLocDeltaParticleVelocity;
