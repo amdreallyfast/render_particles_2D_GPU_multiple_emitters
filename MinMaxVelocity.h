@@ -23,6 +23,9 @@ public:
     void UseRandomDir();
 
     glm::vec4 GetNew() const;
+    float GetMinVelocity() const;
+    float GetDeltaVelocity() const;
+
 private:
     // why store the max if I'm going to be calculating the delta all the time?
     float _velocityDelta;

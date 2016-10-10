@@ -86,3 +86,30 @@ glm::vec4 ParticleEmitterBar::GetEmitDir() const
 {
     return _emitDir;
 }
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    A simple getter for the emitter's minimum velocity.  
+Parameters: None
+Returns:
+    A float.
+Creator:    John Cox (10-10-2016)
+-----------------------------------------------------------------------------------------------*/
+float ParticleEmitterBar::GetMinVelocity() const
+{
+    return _velocityCalculator.GetMinVelocity();
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    A simple getter for the emitter's delta velocity.  
+Parameters: None
+Returns:
+    A float.
+Creator:    John Cox (10-10-2016)
+-----------------------------------------------------------------------------------------------*/
+float ParticleEmitterBar::GetDeltaVelocity() const
+{
+    return _velocityCalculator.GetDeltaVelocity();
+}
+

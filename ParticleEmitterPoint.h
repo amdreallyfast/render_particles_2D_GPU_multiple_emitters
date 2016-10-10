@@ -19,6 +19,8 @@ public:
     virtual void ResetParticle(Particle *resetThis) const override;
 
     glm::vec4 GetPos() const;
+    float GetMinVelocity() const;
+    float GetDeltaVelocity() const;
 
 private:
     glm::vec4 _pos;

@@ -50,6 +50,7 @@ private:
     int _unifLocDeltaParticleVelocity;
     int _unifLocBarP1;
     int _unifLocBarP2;
+    int _unifLocBarEmitDir;
     int _unifLocWindowSpaceRegionTransform;
     int _unifLocWindowSpaceEmitterTransform;
     unsigned int _atomicCounterBuffer;
@@ -60,7 +61,7 @@ private:
     // Note: The compute shader has no concept of inheritance.  Rather than store a single 
     // collection of IParticleEmitter pointers and cast them to either point or bar emitters on 
     // every update, just store them separately.
-    static const int MAX_EMITTERS = 2;
+    static const int MAX_EMITTERS = 4;
     std::vector<const ParticleEmitterPoint *> _pointEmitters;
     std::vector<const ParticleEmitterBar *> _barEmitters;
 };

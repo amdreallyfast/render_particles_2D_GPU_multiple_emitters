@@ -23,6 +23,8 @@ public:
     glm::vec4 GetBarStart() const;
     glm::vec4 GetBarEnd() const;
     glm::vec4 GetEmitDir() const;
+    float GetMinVelocity() const;
+    float GetDeltaVelocity() const;
 
 private:
     glm::vec4 _start;

@@ -29,14 +29,10 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     // these are constant through the program
     _unifLocParticleCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleCount");
     _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
-    _unifLocMinParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMinParticleVelocity");
-    _unifLocDeltaParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaParticleVelocity");
 
     glUseProgram(_computeProgramId);
     glUniform1ui(_unifLocParticleCount, numParticles);
     glUniform1ui(_unifLocPolygonFaceCount, numFaces);
-    glUniform1f(_unifLocMinParticleVelocity, 0.3f);
-    glUniform1f(_unifLocDeltaParticleVelocity, 0.5f);
 
     // courtesy of geeks3D (and my use of glBufferData(...) instead of glMapBuffer(...)
     // http://www.geeks3d.com/20120309/opengl-4-2-atomic-counter-demo-rendering-order-of-fragments/
@@ -52,14 +48,16 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
 
     glUseProgram(0);
 
-    // these are also constant through the program, but won't get set until the emitters are 
-    // added
+    // these are updated during Update(...)
     _unifLocPointEmitterCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPointEmitterCenter");
     _unifLocBarP1 = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarEmitterP1");
     _unifLocBarP2 = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarEmitterP2");
+    _unifLocBarEmitDir = shaderStorageRef.GetUniformLocation(computeShaderKey, "uBarEmitterEmitDir");
 
-    // these are updated during Update(...)
+    _unifLocMinParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMinParticleVelocity");
+    _unifLocDeltaParticleVelocity = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaParticleVelocity");
     _unifLocDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uDeltaTimeSec");
+
     _unifLocMaxParticleEmitCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleEmitCount");
     _unifLocUsePointEmitter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uUsePointEmitter");
     _unifLocOnlyResetParticles = shaderStorageRef.GetUniformLocation(computeShaderKey, "uOnlyResetParticles");
@@ -92,7 +90,7 @@ bool ParticlePolygonComputeUpdater::AddEmitter(const IParticleEmitter *pEmitter)
     const ParticleEmitterBar *barEmitter =
         dynamic_cast<const ParticleEmitterBar *>(pEmitter);
 
-    if (pointEmitter != 0 || (_pointEmitters.size() < MAX_EMITTERS))
+    if (pointEmitter != 0 && (_pointEmitters.size() < MAX_EMITTERS))
     {
         _pointEmitters.push_back(pointEmitter);
         return true;
@@ -159,14 +157,27 @@ void ParticlePolygonComputeUpdater::InitParticleCollection(std::vector<Particle>
 Description:
     Summons the compute shader.
 
-    TODO: spread out the particles between multiple emitters.
+    Particles are spread out evenly between all the emitters (or at least as best as possible; 
+    technically the first emitter emitter gets first dibs at the inactive particles, then the 
+    second emitter gets second dibs, etc.).  This caused some trouble because successive calls 
+    to the compute shader in the same frame caused many particles to have their positions 
+    updated more than once.  To solve this, the compute shader was split into two major 
+    sections: 
+    (1) All the particle emitters reset particles to that emitter's location (up to a limit).
+    (2) Update all particle positions based on velocity and delta time.
+
+    Note: Yes, this algorithm is such that emitters resetting particles have to traverse through 
+    the entire particle collection, but since there isn't a way of telling the CPU where they 
+    were when the last particle was reset and since the GPU seems pretty fast on running through 
+    the entire array, this algorithm is fine.
 Parameters:
     numParticles    Used to compute the number of work groups.
     deltatimeSec        Self-explanatory
 Returns:    None
 Creator:    John Cox (7-4-2016)
 -----------------------------------------------------------------------------------------------*/
-void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const
+void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, 
+    const glm::mat4 &windowSpaceTransform) const
 {
     if (_pointEmitters.empty() && _barEmitters.empty())
     {
@@ -176,7 +187,7 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
 
     // it seems to run through just about all particles if the numerator is 1/10 of the max 
     // particle count (at least for this demo)
-    unsigned int particlesPerEmitterThisFrame = 1000 / (_pointEmitters.size() + _barEmitters.size()); 
+    unsigned int particlesPerEmitterThisFrame = 50 / (_pointEmitters.size() + _barEmitters.size()); 
 
     // spreading the particles evenly between multiple emitters is done by letting all the 
     // particle emitters have a go at all the inactive particles one by one, so all particles 
@@ -194,40 +205,65 @@ void ParticlePolygonComputeUpdater::Update(const float deltaTimeSec, const glm::
     GLuint atomicCounterResetVal = 0;
     glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
 
+    // give all point emitters a chance to reactive inactive particles at their positions
     glUniform1ui(_unifLocUsePointEmitter, 1);
     for (size_t pointEmitterCount = 0; pointEmitterCount < _pointEmitters.size(); pointEmitterCount++)
     {
         // reset everything necessary to control the emission parameters for this emitter
         glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-        glm::vec4 emitterPos = _pointEmitters[pointEmitterCount]->GetPos();
-        float emittertPosArr[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
-        glUniform4fv(_unifLocPointEmitterCenter, 1, emittertPosArr);
+
+        const ParticleEmitterPoint *emitter = _pointEmitters[pointEmitterCount];
+        glUniform1f(_unifLocMinParticleVelocity, emitter->GetMinVelocity());
+        glUniform1f(_unifLocDeltaParticleVelocity, emitter->GetDeltaVelocity());
+
+        // use an array for uploading vectors to be certain of the ordering 
+        glm::vec4 emitterPos = emitter->GetPos();
+        float emitterPosArr[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
+        glUniform4fv(_unifLocPointEmitterCenter, 1, emitterPosArr);
 
         // compute ALL the resets!
+        glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
+
+        // tell the GPU:
+        // (1) Accesses to the shader buffer after this call will reflect writes prior to the 
+        // barrier.  This is only available in OpenGL 4.3 or higher.
+        // (2) Vertex data sourced from buffer objects after the barrier will reflect data 
+        // written by shaders prior to the barrier.  The affected buffer(s) is determined by the 
+        // buffers that were bound for the vertex attributes.  In this case, that means 
+        // GL_ARRAY_BUFFER.
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    }
+
+    // repeat for any bar emitters
+    glUniform1ui(_unifLocUsePointEmitter, 0);
+    for (size_t barEmitterCount = 0; barEmitterCount < _barEmitters.size(); barEmitterCount++)
+    {
+        glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
+
+        const ParticleEmitterBar *emitter = _barEmitters[barEmitterCount];
+        glUniform1f(_unifLocMinParticleVelocity, emitter->GetMinVelocity());
+        glUniform1f(_unifLocDeltaParticleVelocity, emitter->GetDeltaVelocity());
+
+        // each bar has three vectors that need to be uploaded (p1, p2, and emit direction)
+        glm::vec4 emitterBarP1 = emitter->GetBarStart();
+        glm::vec4 emitterBarP2 = emitter->GetBarEnd();
+        glm::vec4 emitDir = emitter->GetEmitDir();
+        float emitterBarP1Arr[4] = { emitterBarP1.x, emitterBarP1.y, emitterBarP1.z, emitterBarP1.w };
+        float emitterBarP2Arr[4] = { emitterBarP2.x, emitterBarP2.y, emitterBarP2.z, emitterBarP2.w };
+        float emitterBarEmitDir[4] = { emitDir.x, emitDir.y, emitDir.y, emitDir.z };
+        glUniform4fv(_unifLocBarP1, 1, emitterBarP1Arr);
+        glUniform4fv(_unifLocBarP2, 1, emitterBarP2Arr);
+        glUniform4fv(_unifLocBarEmitDir, 1, emitterBarEmitDir);
+
+        // MOAR resets!
         glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
 
-    // again for any bar emitters
-    //for (size_t barEmitterCount = 0; barEmitterCount < _barEmitters.size(); barEmitterCount++)
-    //{
-    //    glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);
-    //    //glUniform1ui(_unifLocMaxParticleEmitCount, particlesPerEmitterThisFrame);
-    //    glUniform1ui(_unifLocUsePointEmitter, 0);
-    //}
-
-    // now update particle positions based on their velocity and delta time
+    // position update
     glUniform1f(_unifLocDeltaTimeSec, deltaTimeSec);
     glUniform1ui(_unifLocOnlyResetParticles, 0);
     glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-    // tell the GPU:
-    // (1) Accesses to the shader buffer after this call will reflect writes prior to the 
-    // barrier.  This is only available in OpenGL 4.3 or higher.
-    // (2) Vertex data sourced from buffer objects after the barrier will reflect data written 
-    // by shaders prior to the barrier.  The affected buffer(s) is determined by the buffers 
-    // that were bound for the vertex attributes.  In this case, that means GL_ARRAY_BUFFER.
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
     // cleanup

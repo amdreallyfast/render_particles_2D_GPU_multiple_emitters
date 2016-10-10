@@ -74,7 +74,10 @@ IParticleEmitter *gpParticleEmitterPoint1 = 0;
 IParticleEmitter *gpParticleEmitterPoint2 = 0;
 IParticleEmitter *gpParticleEmitterPoint3 = 0;
 IParticleEmitter *gpParticleEmitterPoint4 = 0;
-//IParticleEmitter *gpParticleEmitterBar;
+IParticleEmitter *gpParticleEmitterBar1 = 0;
+IParticleEmitter *gpParticleEmitterBar2 = 0;
+IParticleEmitter *gpParticleEmitterBar3 = 0;
+IParticleEmitter *gpParticleEmitterBar4 = 0;
 ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
 
 // divide between the circle and the polygon regions
@@ -118,10 +121,10 @@ static void GeneratePolygonRegion(std::vector<PolygonFace> *polygonFaceCollectio
     glm::vec2 p2(+0.5f, -0.75f);
     glm::vec2 p3(+0.75f, +0.5f);
     glm::vec2 p4(-0.75f, +0.5f);
-    glm::vec2 n1(RotateNeg90(p2 - p1));
-    glm::vec2 n2(RotateNeg90(p3 - p2));
-    glm::vec2 n3(RotateNeg90(p4 - p3));
-    glm::vec2 n4(RotateNeg90(p1 - p4));
+    glm::vec2 n1(glm::normalize(RotateNeg90(p2 - p1)));
+    glm::vec2 n2(glm::normalize(RotateNeg90(p3 - p2)));
+    glm::vec2 n3(glm::normalize(RotateNeg90(p4 - p3)));
+    glm::vec2 n4(glm::normalize(RotateNeg90(p1 - p4)));
     PolygonFace face1(MyVertex(p1, n1), MyVertex(p2, n1));
     PolygonFace face2(MyVertex(p2, n2), MyVertex(p3, n2));
     PolygonFace face3(MyVertex(p3, n3), MyVertex(p4, n3));
@@ -211,18 +214,48 @@ void Init()
     // the polygon region
     std::vector<PolygonFace> polygonFaces;
     GeneratePolygonRegion(&polygonFaces);
-    gPolygonFaceBuffer.Init(polygonFaces, 
+    gPolygonFaceBuffer.Init(polygonFaces,
         shaderStorageRef.GetShaderProgram(computeShaderKey),
         shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
 
-    // scatter the point emitters around the center of the polygon region
+    // place the point emitters into the corners of the polygon region
     // Note: Take into account that GeneratePolygonRegion(...) generates a polygon that covers 
     // at least (-0.5f,-0.5f) to (+0.5f,+0.5f).
-    //gpParticleEmitterPoint1 = new ParticleEmitterPoint(glm::vec2(), 0.3f, 0.5f);
-    gpParticleEmitterPoint1 = new ParticleEmitterPoint(glm::vec2(-0.3f, -0.3f), 0.3f, 0.5f);
-    gpParticleEmitterPoint2 = new ParticleEmitterPoint(glm::vec2(-0.3f, +0.3f), 0.3f, 0.5f);
-    gpParticleEmitterPoint3 = new ParticleEmitterPoint(glm::vec2(+0.3f, -0.3f), 0.3f, 0.5f);
-    gpParticleEmitterPoint4 = new ParticleEmitterPoint(glm::vec2(+0.3f, +0.3f), 0.3f, 0.5f);
+    gpParticleEmitterPoint1 = new ParticleEmitterPoint(glm::vec2(-0.4f, -0.5f), 0.3f, 0.5f);
+    gpParticleEmitterPoint2 = new ParticleEmitterPoint(glm::vec2(+0.4f, -0.5f), 0.3f, 0.5f);
+    gpParticleEmitterPoint3 = new ParticleEmitterPoint(glm::vec2(+0.5f, +0.25f), 0.3f, 0.5f);
+    gpParticleEmitterPoint4 = new ParticleEmitterPoint(glm::vec2(-0.5f, +0.25f), 0.3f, 0.5f);
+
+    // scatter the bar emitters on the left, right, top, and bottom of the bar emitter
+    // Note: I want to render the bar, but doing so would require placing it in the collection 
+    // of polygon faces, and those are checked for "out of bounds".  I don't want the emitter's 
+    // face to contribute to the "out of bounds" checks, so rather than hop through hoops to 
+    // draw it, I just won't draw it.  The particles coming off it should be enough to give away 
+    // its location.
+
+    // bottom center and emitting up
+    glm::vec2 barStart(-0.1f, -0.6f);
+    glm::vec2 barEnd(+0.1f, -0.6f);
+    glm::vec2 emitDir(0.0f, +1.0f);
+    gpParticleEmitterBar1 = new ParticleEmitterBar(barStart, barEnd, emitDir, 0.1f, 0.6f);
+
+    // right middle and emitting left
+    barStart = glm::vec2(+0.6f, -0.1f);
+    barEnd = glm::vec2(+0.6f, +0.1f);
+    emitDir = glm::vec2(-1.0f, 0.0f);
+    gpParticleEmitterBar2 = new ParticleEmitterBar(barStart, barEnd, emitDir, 0.1f, 0.6f);
+
+    // top center and emitting down
+    barStart = glm::vec2(+0.1f, +0.4f);
+    barEnd = glm::vec2(-0.1f, +0.4f);
+    emitDir = glm::vec2(0.0f, -1.0f);
+    gpParticleEmitterBar3 = new ParticleEmitterBar(barStart, barEnd, emitDir, 0.1f, 0.6f);
+
+    // left middle and emitting right
+    barStart = glm::vec2(-0.6f, +0.1f);
+    barEnd = glm::vec2(-0.6f, -0.1f);
+    emitDir = glm::vec2(+1.0f, 0.0f);
+    gpParticleEmitterBar4 = new ParticleEmitterBar(barStart, barEnd, emitDir, 0.1f, 0.6f);
 
     // start up the encapsulation of the CPU side of the computer shader
     gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
@@ -230,6 +263,10 @@ void Init()
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint2);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint3);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint4);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar1);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar2);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar3);
+    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar4);
     std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
     gpParticleComputeUpdater->InitParticleCollection(allParticles);
 
@@ -263,8 +300,10 @@ void Display()
 
     // update all particle locations
 
+    // it's a big polygon for window space (see GeneratePolygonRegion(...)), so after rotating 
+    // it, don't move it very far or it will go out of window space and we won't see it
     glm::mat4 windowSpaceTransform = glm::rotate(glm::mat4(), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(+0.3f, +0.3f, 0.0f));
+    windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(-0.1f, -0.05f, 0.0f));
 
     // the magic happens here
     gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
@@ -419,6 +458,10 @@ void CleanupAll()
     delete gpParticleEmitterPoint2;
     delete gpParticleEmitterPoint3;
     delete gpParticleEmitterPoint4;
+    delete gpParticleEmitterBar1;
+    delete gpParticleEmitterBar2;
+    delete gpParticleEmitterBar3;
+    delete gpParticleEmitterBar4;
     delete gpParticleComputeUpdater;
 }
 

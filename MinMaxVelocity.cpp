@@ -86,7 +86,7 @@ glm::vec4 MinMaxVelocity::GetNew() const
         // getting too crazy different from each other.
         float newX = (float)(RandomPosAndNeg() % 100);
         float newY = (float)(RandomPosAndNeg() % 100);
-        glm::vec4 randomVelocityVector = glm::normalize(glm::vec4(newX, newY, 0.0f, 1.0f));
+        glm::vec4 randomVelocityVector = glm::normalize(glm::vec4(newX, newY, 0.0f, 0.0f));
         return (randomVelocityVector * velocityMagnitude);
     }
     else  // read, "don't use random direction"
@@ -95,3 +95,32 @@ glm::vec4 MinMaxVelocity::GetNew() const
     }
 }
 
+/*-----------------------------------------------------------------------------------------------
+Description:
+    A simple getter for the emitter's minimum velocity.  It is used by
+    ParticlePolygonComputeUpdater.cpp to tell the compute shader how fast particles should be
+    spit out of this emitter.
+Parameters: None
+Returns:
+    A float.
+Creator:    John Cox (10-10-2016)
+-----------------------------------------------------------------------------------------------*/
+float MinMaxVelocity::GetMinVelocity() const
+{
+    return _min;
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    A simple getter for the emitter's delta velocity.  It is used by
+    ParticlePolygonComputeUpdater.cpp to tell the compute shader the velocity range that reset
+    particles can be varied over for this emitter.
+Parameters: None
+Returns:
+A float.
+Creator:    John Cox (10-10-2016)
+-----------------------------------------------------------------------------------------------*/
+float MinMaxVelocity::GetDeltaVelocity() const
+{
+    return _velocityDelta;
+}
