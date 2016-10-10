@@ -14,5 +14,6 @@ class IParticleEmitter
 public:
     virtual ~IParticleEmitter() {}
     virtual void ResetParticle(Particle *resetThis) const = 0;
+    virtual void SetTransform(const glm::mat4 &emitterTransform) = 0;
 };
 

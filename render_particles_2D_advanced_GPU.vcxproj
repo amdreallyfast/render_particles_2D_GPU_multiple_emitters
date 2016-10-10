@@ -154,6 +154,7 @@
     <ClCompile Include="OpenGlErrorHandling.cpp" />
     <ClCompile Include="ParticleEmitterBar.cpp" />
     <ClCompile Include="ParticleEmitterPoint.cpp" />
+    <ClCompile Include="ParticlePolygonRegion.cpp" />
     <ClCompile Include="ParticleSsbo.cpp" />
     <ClCompile Include="ParticlePolygonComputeUpdater.cpp" />
     <ClCompile Include="PolygonSsbo.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="FreeTypeEncapsulated.h" />
     <ClInclude Include="GeometryData.h" />
     <ClInclude Include="MyVertex.h" />
+    <ClInclude Include="ParticlePolygonRegion.h" />
     <ClInclude Include="PolygonSsbo.h" />
     <ClInclude Include="SsboBase.h" />
     <ClInclude Include="IParticleEmitter.h" />

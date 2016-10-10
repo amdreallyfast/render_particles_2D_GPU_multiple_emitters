@@ -41,6 +41,9 @@
     <ClCompile Include="PolygonSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
+    <ClCompile Include="ParticlePolygonRegion.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGlErrorHandling.h" />
@@ -89,6 +92,9 @@
     <ClInclude Include="MyVertex.h" />
     <ClInclude Include="PolygonSsbo.h">
       <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticlePolygonRegion.h">
+      <Filter>Particles</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

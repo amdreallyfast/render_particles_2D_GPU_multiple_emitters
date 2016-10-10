@@ -210,7 +210,7 @@ Returns:
     A semi-random float on the range [-1,+1].
 Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
-uniform mat4 uWindowSpaceRegionTransform;
+//uniform mat4 uWindowSpaceRegionTransform;
 bool ParticleOutOfBoundsPolygon(Particle p)
 {
     for (int faceIndex = 0; faceIndex < uPolygonFaceCount; faceIndex++)
@@ -218,8 +218,10 @@ bool ParticleOutOfBoundsPolygon(Particle p)
         PolygonFace f = PolygonRegionFaces[faceIndex];
 
         // for this simple calculation, either the face's start or end point will work
-        vec4 faceToParticle = p._pos - (uWindowSpaceRegionTransform * f._start._pos);
-        vec4 rotatedNormal = uWindowSpaceRegionTransform * f._start._normal;
+        //vec4 faceToParticle = p._pos - (uWindowSpaceRegionTransform * f._start._pos);
+        vec4 faceToParticle = p._pos - (f._start._pos);
+        //vec4 rotatedNormal = uWindowSpaceRegionTransform * f._start._normal;
+        vec4 rotatedNormal = f._start._normal;
         if (dot(faceToParticle, rotatedNormal) > 0)
         {
             return true;
@@ -273,7 +275,7 @@ Returns:
 Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 uniform vec4 uPointEmitterCenter;
-uniform mat4 uWindowSpaceEmitterTransform;
+//uniform mat4 uWindowSpaceEmitterTransform;
 Particle PointEmitterResetPos(Particle p)
 {
     // need a lot of differnt seeds for the "random" hash
@@ -295,7 +297,8 @@ Particle PointEmitterResetPos(Particle p)
     
     Particle pCopy = p;
     
-    vec4 basePosition = uWindowSpaceEmitterTransform * uPointEmitterCenter;
+    //vec4 basePosition = uWindowSpaceEmitterTransform * uPointEmitterCenter;
+    vec4 basePosition = uPointEmitterCenter;
     float posX = RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
     float posY = RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
 
@@ -338,14 +341,17 @@ Particle BarEmitterResetPos(Particle p)
     vec2 velSeed = vec2(p._vel.x, p._vel.y);
 
     // position
-    vec4 start = uWindowSpaceEmitterTransform * uBarEmitterP1;
-    vec4 end = uWindowSpaceEmitterTransform * uBarEmitterP2;
+    //vec4 start = uWindowSpaceEmitterTransform * uBarEmitterP1;
+    vec4 start = uBarEmitterP1;
+    //vec4 end = uWindowSpaceEmitterTransform * uBarEmitterP2;
+    vec4 end = uBarEmitterP2;
     vec4 startToEnd = end - start;
     //pCopy._pos = uBarEmitterP1 + (RandomOnRange0To1(posSeed) * startToEnd);
     pCopy._pos = start + (RandomOnRange0To1(posSeed) * startToEnd);
 
     // velocity
-    vec4 velocityDir = QuickNormalize(uWindowSpaceEmitterTransform *uBarEmitterEmitDir);
+    //vec4 velocityDir = QuickNormalize(uWindowSpaceEmitterTransform *uBarEmitterEmitDir);
+    vec4 velocityDir = QuickNormalize(uBarEmitterEmitDir);
     pCopy._vel = velocityDir * NewVelocityBetweenMinAndMax(velSeed);
 
     return pCopy;

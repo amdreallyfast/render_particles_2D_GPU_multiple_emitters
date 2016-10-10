@@ -226,8 +226,8 @@ unsigned int ParticlePolygonComputeUpdater::Update(const float deltaTimeSec,
 
     // constant throughout the update
     glUseProgram(_computeProgramId);
-    glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
-    glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+    //glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+    //glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
     glUniform1ui(_unifLocOnlyResetParticles, 1);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
     GLuint atomicCounterResetVal = 0;

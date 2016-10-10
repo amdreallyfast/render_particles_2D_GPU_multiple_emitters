@@ -20,6 +20,10 @@ ParticleEmitterPoint::ParticleEmitterPoint(const glm::vec2 &emitterPos, const fl
     _pos = glm::vec4(emitterPos, 0.0f, 1.0f);
     _velocityCalculator.SetMinMaxVelocity(minVel, maxVel);
     _velocityCalculator.UseRandomDir();
+
+    // the transformed variants begin equal to the original points, then diverge after 
+    // SetTransform(...) is called
+    _transformedPos = _pos;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -44,7 +48,7 @@ void ParticleEmitterPoint::ResetParticle(Particle *resetThis) const
     float yOffset = (float)(RandomPosAndNeg() % 100);
     glm::vec4 offset = 0.05f * RandomOnRange0to1() * 
         glm::normalize(glm::vec4(xOffset, yOffset, 0.0f, 1.0f));
-    resetThis->_position = _pos + offset;
+    resetThis->_position = _transformedPos + offset;
 
     resetThis->_velocity = _velocityCalculator.GetNew();
 }
@@ -60,7 +64,7 @@ Creator:    John Cox (9-20-2016)
 -----------------------------------------------------------------------------------------------*/
 glm::vec4 ParticleEmitterPoint::GetPos() const
 {
-    return _pos;
+    return _transformedPos;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -87,4 +91,20 @@ Creator:    John Cox (10-10-2016)
 float ParticleEmitterPoint::GetDeltaVelocity() const
 {
     return _velocityCalculator.GetDeltaVelocity();
+}
+
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Why transform this for every emission of every particle when I can do it once before
+    particle updating and be done with it for the rest of the frame?
+Parameters:
+    emitterTransform    Transform emitter's position with this.
+Returns:    None
+Exception:  Safe
+Creator:    John Cox (10-10-2016)
+-----------------------------------------------------------------------------------------------*/
+void ParticleEmitterPoint::SetTransform(const glm::mat4 &emitterTransform)
+{
+    _transformedPos = emitterTransform * _pos;
 }

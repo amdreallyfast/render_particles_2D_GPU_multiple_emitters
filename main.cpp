@@ -44,6 +44,7 @@
 #include "glm/vec2.hpp"
 #include "ParticleSsbo.h"
 #include "PolygonSsbo.h"
+#include "ParticlePolygonRegion.h"
 #include "ParticlePolygonComputeUpdater.h"
 
 // for moving the shapes around in window space
@@ -64,10 +65,11 @@ GLint gUnifLocGeometryTransform;
 // ??stored in scene??
 ParticleSsbo gParticleBuffer;
 PolygonSsbo gPolygonFaceBuffer;
+ParticleRegionPolygon *gpPolygonRegion = 0;
 
-// in a bigger program, this would somehow be encapsulated and associated with both the circle
-// geometry and the circle particle region, and ditto for the polygon
-glm::mat4 gRegionTransformMatrix;
+//// in a bigger program, this would somehow be encapsulated and associated with both the circle
+//// geometry and the circle particle region, and ditto for the polygon
+//glm::mat4 gRegionTransformMatrix;
 
 // in a bigger program, ??where would particle stuff be stored??
 IParticleEmitter *gpParticleEmitterPoint1 = 0;
@@ -78,7 +80,7 @@ IParticleEmitter *gpParticleEmitterBar1 = 0;
 IParticleEmitter *gpParticleEmitterBar2 = 0;
 IParticleEmitter *gpParticleEmitterBar3 = 0;
 IParticleEmitter *gpParticleEmitterBar4 = 0;
-ParticlePolygonComputeUpdater *gpParticleComputeUpdater;
+ParticlePolygonComputeUpdater *gpParticleComputeUpdater = 0;
 
 // divide between the circle and the polygon regions
 // Note: 
@@ -214,7 +216,11 @@ void Init()
     // the polygon region
     std::vector<PolygonFace> polygonFaces;
     GeneratePolygonRegion(&polygonFaces);
-    gPolygonFaceBuffer.Init(polygonFaces,
+    gpPolygonRegion = new ParticleRegionPolygon(polygonFaces);
+    //gPolygonFaceBuffer.Init(polygonFaces,
+    //    shaderStorageRef.GetShaderProgram(computeShaderKey),
+    //    shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+    gPolygonFaceBuffer.Init(
         shaderStorageRef.GetShaderProgram(computeShaderKey),
         shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
 
@@ -305,7 +311,18 @@ void Display()
     glm::mat4 windowSpaceTransform = glm::rotate(glm::mat4(), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(-0.1f, -0.05f, 0.0f));
 
+    gpPolygonRegion->SetTransform(windowSpaceTransform);
+    gPolygonFaceBuffer.UpdateValues(gpPolygonRegion->GetFaces());
+
     // the magic happens here
+    gpParticleEmitterPoint1->SetTransform(windowSpaceTransform);
+    gpParticleEmitterPoint2->SetTransform(windowSpaceTransform);
+    gpParticleEmitterPoint3->SetTransform(windowSpaceTransform);
+    gpParticleEmitterPoint4->SetTransform(windowSpaceTransform);
+    gpParticleEmitterBar1->SetTransform(windowSpaceTransform);
+    gpParticleEmitterBar2->SetTransform(windowSpaceTransform);
+    gpParticleEmitterBar3->SetTransform(windowSpaceTransform);
+    gpParticleEmitterBar4->SetTransform(windowSpaceTransform);
     unsigned int numActiveParticles = 
         gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
 

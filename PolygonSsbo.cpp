@@ -10,7 +10,8 @@ Returns:    None
 Creator: John Cox, 9-8-2016
 -----------------------------------------------------------------------------------------------*/
 PolygonSsbo::PolygonSsbo() :
-    SsboBase()
+    SsboBase(),
+    _bufferSizeBytes(0)
 {
 }
 
@@ -33,25 +34,28 @@ Description:
 
     Note: The compute shader ID is not necessary to set up the SSBO.
 Parameters: 
-    faceCollection  Self-explanatory.
+    faceCollection  Self-explanatory.   // TODO: delete
     computeProgramId    Required for binding the compute shader's face buffer to the SSBO.
     renderProgramId The rendering shader that will be drawing this polygon.
 Returns:    None
 Creator: John Cox, 9-25-2016
 -----------------------------------------------------------------------------------------------*/
-void PolygonSsbo::Init(const std::vector<PolygonFace> &faceCollection, 
-    unsigned int computeProgramId, unsigned int renderProgramId)
+//void PolygonSsbo::Init(const std::vector<PolygonFace> &faceCollection, 
+//    unsigned int computeProgramId, unsigned int renderProgramId)
+void PolygonSsbo::Init(unsigned int computeProgramId, unsigned int renderProgramId)
 {
     _drawStyle = GL_LINES;
 
-    // two vertices per face
-    _numVertices = faceCollection.size() * 2;
+    //// two vertices per face
+    //_numVertices = faceCollection.size() * 2;
+
+    //_bufferSizeBytes = sizeof(PolygonFace) * faceCollection.size();
 
     // unlike the VAOs, the compute shader program is not required for buffer creation, but it 
     // is required for buffer binding
     glGenBuffers(1, &_bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PolygonFace) * faceCollection.size(), faceCollection.data(), GL_STATIC_DRAW);
+    //glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PolygonFace) * faceCollection.size(), faceCollection.data(), GL_STATIC_DRAW);
     
     // see the corresponding area in ParticleSsbo::Init(...) for explanation
     GLuint ssboBindingPointIndex = 13;   // or 1, or 5, or 17, or wherever IS UNUSED
@@ -98,3 +102,25 @@ void PolygonSsbo::Init(const std::vector<PolygonFace> &faceCollection,
     glUseProgram(0);    // render program
 }
 
+// TODO: header
+void PolygonSsbo::UpdateValues(const const std::vector<PolygonFace> &faceCollection)
+{
+    // two vertices per face
+    _numVertices = faceCollection.size() * 2;
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
+    unsigned int byteCounter = sizeof(PolygonFace) * faceCollection.size();
+    if (byteCounter > _bufferSizeBytes)
+    {
+        // re-allocate more space (yes, this is a crude resize, but its a demo)
+        _bufferSizeBytes = byteCounter;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, _bufferSizeBytes, faceCollection.data(), GL_STATIC_DRAW);
+    }
+    else
+    {
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, _bufferSizeBytes, faceCollection.data());
+    }
+
+    // cleanup
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
