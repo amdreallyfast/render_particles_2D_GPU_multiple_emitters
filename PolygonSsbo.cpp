@@ -29,33 +29,25 @@ PolygonSsbo::~PolygonSsbo()
 
 /*-----------------------------------------------------------------------------------------------
 Description:
-    Given a collection of polygon faces, this allocates an SSBO, dumps the face data into them, 
-    and sets up the vertex attribtues for the render shader.
+    Generates the SSBO, binds it in the computer shader, and generates vertex attributes for 
+    the geometry shader.
 
-    Note: The compute shader ID is not necessary to set up the SSBO.
+    Does NOT allocate space for the buffer or initialize buffer data.  That is done in 
+    UpdateValues(...).
 Parameters: 
-    faceCollection  Self-explanatory.   // TODO: delete
     computeProgramId    Required for binding the compute shader's face buffer to the SSBO.
     renderProgramId The rendering shader that will be drawing this polygon.
 Returns:    None
-Creator: John Cox, 9-25-2016
+Creator: John Cox, 10-10-2016
 -----------------------------------------------------------------------------------------------*/
-//void PolygonSsbo::Init(const std::vector<PolygonFace> &faceCollection, 
-//    unsigned int computeProgramId, unsigned int renderProgramId)
 void PolygonSsbo::Init(unsigned int computeProgramId, unsigned int renderProgramId)
 {
     _drawStyle = GL_LINES;
-
-    //// two vertices per face
-    //_numVertices = faceCollection.size() * 2;
-
-    //_bufferSizeBytes = sizeof(PolygonFace) * faceCollection.size();
 
     // unlike the VAOs, the compute shader program is not required for buffer creation, but it 
     // is required for buffer binding
     glGenBuffers(1, &_bufferId);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
-    //glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PolygonFace) * faceCollection.size(), faceCollection.data(), GL_STATIC_DRAW);
     
     // see the corresponding area in ParticleSsbo::Init(...) for explanation
     GLuint ssboBindingPointIndex = 13;   // or 1, or 5, or 17, or wherever IS UNUSED
@@ -102,10 +94,20 @@ void PolygonSsbo::Init(unsigned int computeProgramId, unsigned int renderProgram
     glUseProgram(0);    // render program
 }
 
-// TODO: header
-void PolygonSsbo::UpdateValues(const const std::vector<PolygonFace> &faceCollection)
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Dumps the given collection of particle faces into the SSBO that is managed by this object.
+
+    Note: This SSBO object has no concept of the compute shader's contents, so it does not 
+    update the compute shader's "num faces" uniform.
+Parameters:
+    faceCollection  Self-explanatory
+Returns:    None
+Creator: John Cox, 10-10-2016
+-----------------------------------------------------------------------------------------------*/
+void PolygonSsbo::UpdateValues(const std::vector<PolygonFace> &faceCollection)
 {
-    // two vertices per face
+    // two vertices per face (used with glDrawArrays)
     _numVertices = faceCollection.size() * 2;
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);

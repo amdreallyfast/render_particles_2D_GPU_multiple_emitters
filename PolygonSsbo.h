@@ -16,9 +16,8 @@ public:
     PolygonSsbo();
     virtual ~PolygonSsbo();
 
-    //void Init(const std::vector<PolygonFace> &faceCollection, unsigned int computeProgramId, unsigned int renderProgramId);
     void Init(unsigned int computeProgramId, unsigned int renderProgramId);
-    void UpdateValues(const const std::vector<PolygonFace> &faceCollection);
+    void UpdateValues(const std::vector<PolygonFace> &faceCollection);
 
 private:
     unsigned int _bufferSizeBytes;

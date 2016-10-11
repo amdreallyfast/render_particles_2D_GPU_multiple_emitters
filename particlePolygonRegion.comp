@@ -297,7 +297,6 @@ Particle PointEmitterResetPos(Particle p)
     
     Particle pCopy = p;
     
-    //vec4 basePosition = uWindowSpaceEmitterTransform * uPointEmitterCenter;
     vec4 basePosition = uPointEmitterCenter;
     float posX = RandomOnRangeNeg1ToPos1(posSeed1, posSeed2);
     float posY = RandomOnRangeNeg1ToPos1(posSeed3, posSeed4);
@@ -341,16 +340,13 @@ Particle BarEmitterResetPos(Particle p)
     vec2 velSeed = vec2(p._vel.x, p._vel.y);
 
     // position
-    //vec4 start = uWindowSpaceEmitterTransform * uBarEmitterP1;
     vec4 start = uBarEmitterP1;
-    //vec4 end = uWindowSpaceEmitterTransform * uBarEmitterP2;
     vec4 end = uBarEmitterP2;
     vec4 startToEnd = end - start;
     //pCopy._pos = uBarEmitterP1 + (RandomOnRange0To1(posSeed) * startToEnd);
     pCopy._pos = start + (RandomOnRange0To1(posSeed) * startToEnd);
 
     // velocity
-    //vec4 velocityDir = QuickNormalize(uWindowSpaceEmitterTransform *uBarEmitterEmitDir);
     vec4 velocityDir = QuickNormalize(uBarEmitterEmitDir);
     pCopy._vel = velocityDir * NewVelocityBetweenMinAndMax(velSeed);
 

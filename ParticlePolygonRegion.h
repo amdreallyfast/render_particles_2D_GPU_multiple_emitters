@@ -6,9 +6,6 @@
 #include <vector>
 
 
-// num corners == num faces
-const unsigned int MAX_POLYGON_FACES = 10;
-
 /*-----------------------------------------------------------------------------------------------
 Description:
     This object defines a polygonal region within which particles are considered active.  It is 
@@ -27,7 +24,7 @@ public:
 private:
     // this stuff is only kept around as a reference for when transforms need to update it, 
     // which is merely once per frame, so unlike "render particles 2D advanced CPU", cache 
-    // coherency isn't much of a convern here
+    // coherency isn't much of a concern here
     std::vector<PolygonFace> _originalFaces;
     std::vector<PolygonFace> _transformedFaces;
 };

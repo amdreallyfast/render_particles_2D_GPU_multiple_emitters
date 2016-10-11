@@ -70,8 +70,9 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     _unifLocMaxParticleEmitCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleEmitCount");
     _unifLocUsePointEmitter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uUsePointEmitter");
     _unifLocOnlyResetParticles = shaderStorageRef.GetUniformLocation(computeShaderKey, "uOnlyResetParticles");
-    _unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceRegionTransform");
-    _unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceEmitterTransform");
+
+    //_unifLocWindowSpaceRegionTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceRegionTransform");
+    //_unifLocWindowSpaceEmitterTransform = shaderStorageRef.GetUniformLocation(computeShaderKey, "uWindowSpaceEmitterTransform");
 
 }
 
@@ -226,8 +227,11 @@ unsigned int ParticlePolygonComputeUpdater::Update(const float deltaTimeSec,
 
     // constant throughout the update
     glUseProgram(_computeProgramId);
+
+    // just leave these in case I need them in a future program
     //glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
     //glUniformMatrix4fv(_unifLocWindowSpaceEmitterTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
+
     glUniform1ui(_unifLocOnlyResetParticles, 1);
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterBuffer);
     GLuint atomicCounterResetVal = 0;

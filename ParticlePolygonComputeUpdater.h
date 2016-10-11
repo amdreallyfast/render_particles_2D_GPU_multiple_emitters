@@ -52,8 +52,10 @@ private:
     int _unifLocBarP1;
     int _unifLocBarP2;
     int _unifLocBarEmitDir;
-    int _unifLocWindowSpaceRegionTransform;
-    int _unifLocWindowSpaceEmitterTransform;
+
+    // just leave these in case I need them in a future program
+    //int _unifLocWindowSpaceRegionTransform;
+    //int _unifLocWindowSpaceEmitterTransform;
     
     // the atomic counter is used to 
     // (1) enforce the number of emitted particles per emitter per frame and 

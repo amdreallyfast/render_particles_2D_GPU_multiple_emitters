@@ -1,8 +1,10 @@
 #version 440
 
+// this should already be transformed because it is pre-transformed for the compute shader 
 layout (location = 0) in vec2 pos;
 
-uniform mat4 transformMatrixWindowSpace;
+// keep this around in case it's needed later
+//uniform mat4 transformMatrixWindowSpace;
 
 void main()
 {
