@@ -311,10 +311,10 @@ void Display()
     glm::mat4 windowSpaceTransform = glm::rotate(glm::mat4(), 45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
     windowSpaceTransform *= glm::translate(glm::mat4(), glm::vec3(-0.1f, -0.05f, 0.0f));
 
+    // pre-compute vertices so that they don't have to be transformed in exactly the same way 
+    // for every single particle
     gpPolygonRegion->SetTransform(windowSpaceTransform);
     gPolygonFaceBuffer.UpdateValues(gpPolygonRegion->GetFaces());
-
-    // the magic happens here
     gpParticleEmitterPoint1->SetTransform(windowSpaceTransform);
     gpParticleEmitterPoint2->SetTransform(windowSpaceTransform);
     gpParticleEmitterPoint3->SetTransform(windowSpaceTransform);
@@ -323,9 +323,11 @@ void Display()
     gpParticleEmitterBar2->SetTransform(windowSpaceTransform);
     gpParticleEmitterBar3->SetTransform(windowSpaceTransform);
     gpParticleEmitterBar4->SetTransform(windowSpaceTransform);
+
+    // the MAGIC happens here
     unsigned int numActiveParticles = 
         gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
-
+    
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     glUniformMatrix4fv(gUnifLocGeometryTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
