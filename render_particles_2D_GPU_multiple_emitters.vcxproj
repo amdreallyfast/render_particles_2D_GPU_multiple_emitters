@@ -148,7 +148,6 @@
   <ItemGroup>
     <ClCompile Include="FreeTypeAtlas.cpp" />
     <ClCompile Include="FreeTypeEncapsulated.cpp" />
-    <ClCompile Include="GeometryData.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MinMaxVelocity.cpp" />
     <ClCompile Include="OpenGlErrorHandling.cpp" />
@@ -158,7 +157,6 @@
     <ClCompile Include="ParticleSsbo.cpp" />
     <ClCompile Include="ParticlePolygonComputeUpdater.cpp" />
     <ClCompile Include="PolygonSsbo.cpp" />
-    <ClCompile Include="PrimitiveGeneration.cpp" />
     <ClCompile Include="RandomToast.cpp" />
     <ClCompile Include="ShaderStorage.cpp" />
     <ClCompile Include="SsboBase.cpp" />
@@ -176,7 +174,6 @@
   <ItemGroup>
     <ClInclude Include="FreeTypeAtlas.h" />
     <ClInclude Include="FreeTypeEncapsulated.h" />
-    <ClInclude Include="GeometryData.h" />
     <ClInclude Include="MyVertex.h" />
     <ClInclude Include="ParticlePolygonRegion.h" />
     <ClInclude Include="PolygonSsbo.h" />
@@ -190,7 +187,6 @@
     <ClInclude Include="ParticleSsbo.h" />
     <ClInclude Include="ParticlePolygonComputeUpdater.h" />
     <ClInclude Include="PolygonFace.h" />
-    <ClInclude Include="PrimitiveGeneration.h" />
     <ClInclude Include="RandomToast.h" />
     <ClInclude Include="ShaderStorage.h" />
     <ClInclude Include="Stopwatch.h" />
