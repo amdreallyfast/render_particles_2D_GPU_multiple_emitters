@@ -549,7 +549,7 @@ void FreeTypeAtlas::RenderText(const std::string &str, const float posScreenCoor
 
     // load up the data, and only reallocate if you need too
     static unsigned int maxBufferSizeBytes = 0;
-    int numBytes = glyphBoxes.size() * sizeof(point);
+    unsigned int numBytes = glyphBoxes.size() * sizeof(point);
     if (numBytes > maxBufferSizeBytes)
     {
         // give a little more space than is necessary
