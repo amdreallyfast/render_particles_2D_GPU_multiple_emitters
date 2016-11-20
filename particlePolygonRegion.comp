@@ -157,7 +157,7 @@ Description:
 Parameters: None
 Returns:
     A semi-random float.
-Creator: John Cox (11-20-2016)
+Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 float RandomOnRange0To1()
 {
@@ -179,7 +179,7 @@ Description:
 Parameters:	None
 Returns:
     A semi-random float on the range [-1,+1].
-Creator: John Cox (11-20-2016)
+Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 float RandomOnRangeNeg1ToPos1()
 {

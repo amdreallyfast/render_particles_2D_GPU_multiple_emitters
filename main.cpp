@@ -274,7 +274,6 @@ void Init()
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar3);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar4);
     std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
-    //gpParticleComputeUpdater->InitParticleCollection(allParticles);
 
     // the particle buffer needs the particles to be initialized first by the compute updater's 
     // InitParticleCollection(...)

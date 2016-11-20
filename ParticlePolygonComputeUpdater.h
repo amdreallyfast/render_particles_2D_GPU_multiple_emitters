@@ -29,7 +29,6 @@ public:
     ~ParticlePolygonComputeUpdater();
 
     bool AddEmitter(const IParticleEmitter *pEmitter);
-    void InitParticleCollection(std::vector<Particle> &initThis);
 
     unsigned int Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const;
 
@@ -77,11 +76,8 @@ private:
 
 	// another atomic counter is used as a seed for the random hash
 	// Note: Rather than needing to seed the position and velocity as I did in the 
-	// "single emitter" project, use an atomic counter.  The rand hash is sufficiently chaotic 
-	// that two sequential integers are good enough.  It is still a hash though, so start it up 
-	// with a random number to give different results each time the program is run, giving the 
-	// illusion of randomness.  If it reaches maximum unsigned int, that is ok.  The value will 
-	// wrap around to 0 and begin again.  
+	// "single emitter" project, use an atomic counter.  If it reaches maximum unsigned int, 
+	// that is ok.  The value will wrap around to 0 and begin again.  
 	unsigned int _atomicCounterRandSeed;
 
     // all the updating heavy lifting goes on in the compute shader, so CPU cache coherency is 

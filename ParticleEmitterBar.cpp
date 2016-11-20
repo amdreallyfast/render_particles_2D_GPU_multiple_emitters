@@ -20,38 +20,17 @@ ParticleEmitterBar::ParticleEmitterBar(const glm::vec2 &p1, const glm::vec2 &p2,
     // the start and end points should be translatable
     _start = glm::vec4(p1, 0.0f, 1.0f);
     _end = glm::vec4(p2, 0.0f, 1.0f);
-    _velocityCalculator.SetMinMaxVelocity(minVel, maxVel);
+	_minVel = minVel;
+	_deltaVelocity = maxVel - minVel;
 
     // emission direction should not be translatable; like a normal, it should only be rotatable
     _emitDir = glm::vec4(emitDir, 0.0f, 0.0f);
-    _velocityCalculator.SetDir(emitDir);
 
     // the transformed variants begin equal to the original points, then diverge after 
     // SetTransform(...) is called
     _transformedStart = _start;
     _transformedEnd = _end;
     _transformedEmitDir = _emitDir;
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Sets the given particle's starting position and velocity.  The position is set to a random 
-    point along the var.
-    
-    Does NOT alter the "is active" flag.  That flag is altered only by the "particle updater" 
-    object.
-Parameters:
-resetThis   Self-explanatory.
-Returns:    None
-Creator:    John Cox (7-2-2016)
------------------------------------------------------------------------------------------------*/
-void ParticleEmitterBar::ResetParticle(Particle *resetThis) const
-{
-    // give it some flavor by making the particles be reset to within a range near the emitter 
-    // bar's position instead of exactly on the bar, making it look like a particle hotspot
-    glm::vec4 startToEnd = _transformedEnd - _transformedStart;
-    resetThis->_position = _transformedStart + (RandomOnRange0to1() * startToEnd);
-    resetThis->_velocity = _velocityCalculator.GetNew();
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -104,7 +83,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterBar::GetMinVelocity() const
 {
-    return _velocityCalculator.GetMinVelocity();
+	return _minVel;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -117,7 +96,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterBar::GetDeltaVelocity() const
 {
-    return _velocityCalculator.GetDeltaVelocity();
+	return _deltaVelocity;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -135,7 +114,4 @@ void ParticleEmitterBar::SetTransform(const glm::mat4 &emitterTransform)
     _transformedStart = emitterTransform * _start;
     _transformedEnd = emitterTransform * _end;
     _transformedEmitDir = emitterTransform * _emitDir;
-
-    // this glm::vec2(...) constructor only strips out the X and Y; it's rather handy
-    _velocityCalculator.SetDir(glm::vec2(_transformedEmitDir));
 }

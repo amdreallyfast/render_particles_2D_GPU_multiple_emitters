@@ -18,39 +18,12 @@ ParticleEmitterPoint::ParticleEmitterPoint(const glm::vec2 &emitterPos, const fl
 {
     // this demo is in window space, so Z pos is 0, but let it be translatable (4th value is 1)
     _pos = glm::vec4(emitterPos, 0.0f, 1.0f);
-    _velocityCalculator.SetMinMaxVelocity(minVel, maxVel);
-    _velocityCalculator.UseRandomDir();
+	_minVel = minVel;
+	_deltaVelocity = maxVel - minVel;
 
     // the transformed variants begin equal to the original points, then diverge after 
     // SetTransform(...) is called
     _transformedPos = _pos;
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Sets the given particle's starting position and velocity.  Does NOT alter the "is active" 
-    flag.  That flag is altered only by the "particle updater" object.
-Parameters:
-    resetThis   Self-explanatory.
-Returns:    None
-Creator:    John Cox (7-2-2016)
------------------------------------------------------------------------------------------------*/
-void ParticleEmitterPoint::ResetParticle(Particle *resetThis) const
-{
-    // give it some flavor by making the particles be reset to within a range near the emitter's 
-    // position, making it look like a particle hotspot
-    // Note: Making the particle reset in a random position in a small radius from the emitter 
-    // center is more involved than I initially thought.  
-    // - Random direction, get a random X and a random Y and then normalize that vector.  
-    // - Random distance along that direction vector, get a random number between 0 and 1.  
-    // - Shrink it to the desired size with a scalar.
-    float xOffset = (float)(RandomPosAndNeg() % 100);
-    float yOffset = (float)(RandomPosAndNeg() % 100);
-    glm::vec4 offset = 0.05f * RandomOnRange0to1() * 
-        glm::normalize(glm::vec4(xOffset, yOffset, 0.0f, 1.0f));
-    resetThis->_position = _transformedPos + offset;
-
-    resetThis->_velocity = _velocityCalculator.GetNew();
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -77,7 +50,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterPoint::GetMinVelocity() const
 {
-    return _velocityCalculator.GetMinVelocity();
+	return _minVel;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -90,9 +63,8 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterPoint::GetDeltaVelocity() const
 {
-    return _velocityCalculator.GetDeltaVelocity();
+	return _deltaVelocity;
 }
-
 
 /*-----------------------------------------------------------------------------------------------
 Description:

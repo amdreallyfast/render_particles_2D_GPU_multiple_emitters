@@ -65,6 +65,8 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
 
 	// starting up the random hash counter
 	// Note: Remember to use the SAME buffer binding base as specified in the shader.
+	// Also Note: The "random" function is a hash, so start it up with a random number to give 
+	// different results each time the program is run.
 	glGenBuffers(1, &_atomicCounterRandSeed);
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterRandSeed);
 	srand(time(0));
@@ -145,61 +147,6 @@ bool ParticlePolygonComputeUpdater::AddEmitter(const IParticleEmitter *pEmitter)
     }
 
     return false;
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Gives the particle collection initial values.  The particles are initialized evenly between 
-    between all emitters.
-    
-    Note: This function is necessary because particles init with 0 values and GLSL doesn't have 
-    a random() function.  This demo has instead used a random hash function that is quite 
-    chaotic but relies on the particles having non-zero velocities.  If all the particles start 
-    with velocities of 0, then the hash won't work.  
-Parameters:
-    initThis    A non-const reference to the particle collection that needs to be initialized.
-Returns:    None
-Creator:    John Cox, 9-25-2016
------------------------------------------------------------------------------------------------*/
-void ParticlePolygonComputeUpdater::InitParticleCollection(std::vector<Particle> &initThis)
-{
-    unsigned int totalParticles = initThis.size();
-
-    for (size_t particleCount = 0; particleCount < totalParticles; )
-    {
-        unsigned int perEmitterCount = 0;
-        for (size_t pointEmitterCount = 0; pointEmitterCount < _pointEmitters.size(); pointEmitterCount++)
-        {
-            // prevent particle array overrun
-            if (particleCount + perEmitterCount == totalParticles)
-            {
-                break;
-            }
-
-            _pointEmitters[pointEmitterCount]->ResetParticle(&initThis[particleCount + perEmitterCount]);
-            perEmitterCount++;
-        }
-
-        for (size_t barEmitterCount = 0; barEmitterCount < _barEmitters.size(); barEmitterCount++)
-        {
-            // prevent particle array overrun
-            if (particleCount + perEmitterCount == totalParticles)
-            {
-                break;
-            }
-
-            _barEmitters[barEmitterCount]->ResetParticle(&initThis[particleCount + perEmitterCount]);
-            perEmitterCount++;
-        }
-
-        particleCount += perEmitterCount;
-    }
-}
-
-
-static unsigned int GetAtomicCounterVal()
-{
-
 }
 
 /*-----------------------------------------------------------------------------------------------

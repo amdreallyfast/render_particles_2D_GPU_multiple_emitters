@@ -17,7 +17,6 @@ class ParticleEmitterBar : public IParticleEmitter
 public:
     ParticleEmitterBar(const glm::vec2 &p1, const glm::vec2 &p2, const glm::vec2 &emitDir,
         const float minVel, const float maxVel);
-    virtual void ResetParticle(Particle *resetThis) const override;
     virtual void SetTransform(const glm::mat4 &emitterTransform) override;
 
     glm::vec4 GetBarStart() const;
@@ -30,8 +29,8 @@ private:
     glm::vec4 _start;
     glm::vec4 _end;
     glm::vec4 _emitDir;
-
-    MinMaxVelocity _velocityCalculator;
+	float _minVel;
+	float _deltaVelocity;
 
     glm::vec4 _transformedStart;
     glm::vec4 _transformedEnd;
