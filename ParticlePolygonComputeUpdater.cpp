@@ -6,6 +6,10 @@
 #include "glload/include/glload/gl_4_4.h"
 #include "glm/gtc/type_ptr.hpp"
 
+// for starting up the atomic counter for the compute shader's rand hash
+#include <random>
+#include <time.h>
+
 /*-----------------------------------------------------------------------------------------------
 Description:
     Looks up all uniforms in the compute shader that checks particles against a polygon region.  
@@ -50,10 +54,25 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _atomicCounterBuffer);
 
     // the atomic counter copy buffer follows suit
+	// Note: Do not bind a buffer base for this one because it is not in the shader.  It is 
+	// instead meant to copy the atomic counter buffer before the copy is mapped to a system 
+	// memory pointer.  Doing this with the actual atomic counter caused a horrific performance 
+	// drop.  It appeared to completely trash the instruction pipeline.
     glGenBuffers(1, &_atomicCounterCopyBuffer);
     glBindBuffer(GL_COPY_WRITE_BUFFER, _atomicCounterCopyBuffer);
     glBufferData(GL_COPY_WRITE_BUFFER, sizeof(GLuint), 0, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+
+	// starting up the random hash counter
+	// Note: Remember to use the SAME buffer binding base as specified in the shader.
+	glGenBuffers(1, &_atomicCounterRandSeed);
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, _atomicCounterRandSeed);
+	srand(time(0));
+	GLuint initialRandHashValue = rand() % rand();
+	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), (void *)&initialRandHashValue, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, _atomicCounterRandSeed);
+
 
     glUseProgram(0);
 
@@ -87,6 +106,7 @@ ParticlePolygonComputeUpdater::~ParticlePolygonComputeUpdater()
 {
     glDeleteBuffers(1, &_atomicCounterBuffer);
     glDeleteBuffers(1, &_atomicCounterCopyBuffer);
+	glDeleteBuffers(1, &_atomicCounterRandSeed);
 }
 
 /*-----------------------------------------------------------------------------------------------

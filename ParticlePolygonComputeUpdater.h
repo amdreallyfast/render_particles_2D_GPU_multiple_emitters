@@ -57,7 +57,7 @@ private:
     //int _unifLocWindowSpaceRegionTransform;
     //int _unifLocWindowSpaceEmitterTransform;
     
-    // the atomic counter is used to 
+    // one atomic counter is used to 
     // (1) enforce the number of emitted particles per emitter per frame and 
     // (2) count how many particles are currently active
     // Note: The atomic counter, as fast as it is, doesn't seem to fully enforce the number of 
@@ -75,6 +75,14 @@ private:
     unsigned int _atomicCounterBuffer;
     unsigned int _atomicCounterCopyBuffer;
 
+	// another atomic counter is used as a seed for the random hash
+	// Note: Rather than needing to seed the position and velocity as I did in the 
+	// "single emitter" project, use an atomic counter.  The rand hash is sufficiently chaotic 
+	// that two sequential integers are good enough.  It is still a hash though, so start it up 
+	// with a random number to give different results each time the program is run, giving the 
+	// illusion of randomness.  If it reaches maximum unsigned int, that is ok.  The value will 
+	// wrap around to 0 and begin again.  
+	unsigned int _atomicCounterRandSeed;
 
     // all the updating heavy lifting goes on in the compute shader, so CPU cache coherency is 
     // not a concern for emitter storage on the CPU side and a std::vector<...> is acceptable

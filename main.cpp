@@ -265,16 +265,16 @@ void Init()
 
     // start up the encapsulation of the CPU side of the computer shader
     gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
-    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint1);
-    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint2);
-    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint3);
-    gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint4);
+	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint1);
+	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint2);
+	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint3);
+	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint4);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar1);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar2);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar3);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar4);
     std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
-    gpParticleComputeUpdater->InitParticleCollection(allParticles);
+    //gpParticleComputeUpdater->InitParticleCollection(allParticles);
 
     // the particle buffer needs the particles to be initialized first by the compute updater's 
     // InitParticleCollection(...)
