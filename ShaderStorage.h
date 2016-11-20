@@ -25,10 +25,6 @@ public:
     void NewShader(const std::string &programKey);
     void DeleteProgram(const std::string &programKey);
 
-    void AddComputeShaderFile(const std::string &programKey, const std::string &filePath);
-    void CompileComputeShader(const std::string &programKey);
-    GLuint LinkComputeShader(const std::string &programKey);
-
     void AddShaderFile(const std::string &programKey, const std::string &filePath,
         const GLenum shaderType);
     GLuint LinkShader(const std::string &programKey);

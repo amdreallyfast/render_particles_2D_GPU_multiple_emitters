@@ -190,9 +190,6 @@ void Init()
     // for the particle compute shader stuff
     std::string computeShaderKey = "compute particles";
     shaderStorageRef.NewShader(computeShaderKey);
-    //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleStructure.comp");
-    //shaderStorageRef.AddComputeShaderFile("particleCompute", "particleMain.comp");
-    //shaderStorageRef.CompileComputeShader("particleCompute");
     shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
     shaderStorageRef.LinkShader(computeShaderKey);
 
@@ -217,9 +214,6 @@ void Init()
     std::vector<PolygonFace> polygonFaces;
     GeneratePolygonRegion(&polygonFaces);
     gpPolygonRegion = new ParticleRegionPolygon(polygonFaces);
-    //gPolygonFaceBuffer.Init(polygonFaces,
-    //    shaderStorageRef.GetShaderProgram(computeShaderKey),
-    //    shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
     gPolygonFaceBuffer.Init(
         shaderStorageRef.GetShaderProgram(computeShaderKey),
         shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
