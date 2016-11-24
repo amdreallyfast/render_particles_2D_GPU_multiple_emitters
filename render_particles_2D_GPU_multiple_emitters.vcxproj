@@ -173,6 +173,7 @@
     <None Include="geometry.frag" />
     <None Include="geometry.vert" />
     <None Include="particleReset.comp" />
+    <None Include="particleUpdater.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComputeUpdaterParticleReset.h" />

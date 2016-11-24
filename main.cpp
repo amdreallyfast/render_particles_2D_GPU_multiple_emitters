@@ -194,7 +194,8 @@ void Init()
     // for the particle compute shader stuff
     std::string computeShaderUpdateKey = "compute particle update";
     shaderStorageRef.NewShader(computeShaderUpdateKey);
-    shaderStorageRef.AddShaderFile(computeShaderUpdateKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
+    //shaderStorageRef.AddShaderFile(computeShaderUpdateKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
+	shaderStorageRef.AddShaderFile(computeShaderUpdateKey, "particleUpdater.comp", GL_COMPUTE_SHADER);
     shaderStorageRef.LinkShader(computeShaderUpdateKey);
 
 	std::string computeShaderResetKey = "compute particle reset";
@@ -349,7 +350,9 @@ void Display()
 	//	gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
 
 	// reset inactive particles
-	gpParticleReseter->ResetParticles(50);
+	// Note: 20 particles per emitter per frame * 8 emitters * 60 frames per second stabilizes (for this particle region and the emitters' min-max spawn velocities) at ~45,000 active particles in one moment.
+	// Also Note: 50 easily maxes out the maximuum 100,000 total particles active at one time.
+	gpParticleReseter->ResetParticles(20);
 
 	// update active particles
 	unsigned int numActiveParticles = gpParticleUpdater->Update(0.01f);
@@ -543,7 +546,7 @@ int main(int argc, char *argv[])
     glutInitContextProfile(GLUT_CORE_PROFILE);
 
     // enable this for automatic message reporting (see OpenGlErrorHandling.cpp)
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     glutInitContextFlags(GLUT_DEBUG);
 #endif

@@ -76,8 +76,8 @@ ComputeUpdaterParticleReset::ComputeUpdaterParticleReset(unsigned int numParticl
 	// Note: It seems that atomic counters must be bound where they are declared and cannot be 
 	// bound dynamically like the ParticleSsbo and PolygonSsbo.  So remember to use the SAME buffer 
 	// binding base as specified in the shader.
-	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _acParticleCounterBufferId);
-	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, _acRandSeed);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 3, _acParticleCounterBufferId);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 4, _acRandSeed);
 
 
 }
@@ -143,11 +143,6 @@ Description:
     to the compute shader in the same frame caused many particles to have their positions 
     updated more than once.  To solve this, the compute shader was split into two major 
     sections: 
-
-    Note: Yes, this algorithm is such that emitters resetting particles have to traverse through 
-    the entire particle collection, but since there isn't a way of telling the CPU where they 
-    were when the last particle was reset and since the GPU seems pretty fast on running through 
-    the entire array, this algorithm is fine.
 Parameters:	
 	particlesPerEmitterPerFrame		Limits the number of particles that are reset per frame so 
 	that they don't all spawn at once.
@@ -167,6 +162,10 @@ void ComputeUpdaterParticleReset::ResetParticles(unsigned int particlesPerEmitte
 	// spreading the particles evenly between multiple emitters is done by letting all the 
 	// particle emitters have a go at all the inactive particles one by one, so all particles 
 	// must be considered
+    // Note: Yes, this algorithm is such that emitters resetting particles have to traverse 
+	// through the entire particle collection, but since there isn't a way of telling the CPU 
+	// where they were when the last particle was reset and since the GPU seems pretty fast on 
+	// running through the entire array, this algorithm is fine.
 	GLuint numWorkGroupsX = (_totalParticleCount / 256) + 1;
 	GLuint numWorkGroupsY = 1;
 	GLuint numWorkGroupsZ = 1;
@@ -203,6 +202,28 @@ void ComputeUpdaterParticleReset::ResetParticles(unsigned int particlesPerEmitte
 		// buffers that were bound for the vertex attributes.  In this case, that means 
 		// GL_ARRAY_BUFFER.
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+
+
+
+		//GLuint acCopyBufferId = 0;
+		//glGenBuffers(1, &acCopyBufferId);
+		//glBindBuffer(GL_COPY_WRITE_BUFFER, acCopyBufferId);
+		//glBufferData(GL_COPY_WRITE_BUFFER, sizeof(GLuint), 0, GL_DYNAMIC_DRAW);
+
+		//glBindBuffer(GL_COPY_READ_BUFFER, _acParticleCounterBufferId);
+		//glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(GLuint));
+		//unsigned int *ptr = (GLuint*)glMapBufferRange(GL_COPY_WRITE_BUFFER, 0, sizeof(GLuint), GL_MAP_READ_BIT);
+		//unsigned int numActiveParticles = *ptr;
+		//glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+
+		//// cleanup
+		//glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+		//glBindBuffer(GL_COPY_READ_BUFFER, 0);
+		//glDeleteBuffers(1, &acCopyBufferId);
+
+		//printf("num particles reset at point emitter %d = %d\n", pointEmitterCount, acCopyBufferId);
+
 	}
 
 	// repeat for any bar emitters
