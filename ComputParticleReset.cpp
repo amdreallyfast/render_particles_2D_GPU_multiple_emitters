@@ -1,4 +1,4 @@
-#include "ComputeUpdaterParticleReset.h"
+#include "ComputeParticleReset.h"
 
 #include "ShaderStorage.h"
 
@@ -24,7 +24,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (11-24-2016)
 -----------------------------------------------------------------------------------------------*/
-ComputeUpdaterParticleReset::ComputeUpdaterParticleReset(unsigned int numParticles, 
+ComputeParticleReset::ComputeParticleReset(unsigned int numParticles, 
 	const std::string &computeShaderKey)
 {
 	_totalParticleCount = numParticles;
@@ -89,7 +89,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (10-10-2016)	(created prior to this class in an earlier design)
 -----------------------------------------------------------------------------------------------*/
-ComputeUpdaterParticleReset::~ComputeUpdaterParticleReset()
+ComputeParticleReset::~ComputeParticleReset()
 {
 	glDeleteBuffers(1, &_acParticleCounterBufferId);
 	glDeleteBuffers(1, &_acRandSeed);
@@ -112,7 +112,7 @@ Returns:
     True if the emitter was added, otherwise false.
 Creator:    John Cox (9-18-2016)	(created prior to this class in an earlier design)
 -----------------------------------------------------------------------------------------------*/
-bool ComputeUpdaterParticleReset::AddEmitter(const IParticleEmitter *pEmitter)
+bool ComputeParticleReset::AddEmitter(const IParticleEmitter *pEmitter)
 {
 	const ParticleEmitterPoint *pointEmitter =
 		dynamic_cast<const ParticleEmitterPoint *>(pEmitter);
@@ -149,7 +149,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (10-10-2016)	(created prior to this class in an earlier design)
 -----------------------------------------------------------------------------------------------*/
-void ComputeUpdaterParticleReset::ResetParticles(unsigned int particlesPerEmitterPerFrame)
+void ComputeParticleReset::ResetParticles(unsigned int particlesPerEmitterPerFrame)
 {
 	if (_pointEmitters.empty() || _barEmitters.empty())
 	{

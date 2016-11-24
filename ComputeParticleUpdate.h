@@ -18,11 +18,11 @@ Description:
 
 Creator:    John Cox (11-24-2016)
 -----------------------------------------------------------------------------------------------*/
-class ComputeUpdaterParticleUpdater
+class ComputeParticleUpdate
 {
 public:
-	ComputeUpdaterParticleUpdater(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey);
-	~ComputeUpdaterParticleUpdater();
+	ComputeParticleUpdate(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey);
+	~ComputeParticleUpdate();
 
 	unsigned int Update(const float deltaTimeSec) const;
 

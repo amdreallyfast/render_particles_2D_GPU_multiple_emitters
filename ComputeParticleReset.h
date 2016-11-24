@@ -20,11 +20,11 @@ Description:
 	only using const pointers.
 Creator:    John Cox (11-24-2016)
 -----------------------------------------------------------------------------------------------*/
-class ComputeUpdaterParticleReset
+class ComputeParticleReset
 {
 public:
-	ComputeUpdaterParticleReset(unsigned int numParticles, const std::string &computeShaderKey);
-	~ComputeUpdaterParticleReset();
+	ComputeParticleReset(unsigned int numParticles, const std::string &computeShaderKey);
+	~ComputeParticleReset();
 
 	bool AddEmitter(const IParticleEmitter *pEmitter);
 

@@ -83,8 +83,8 @@ IParticleEmitter *gpParticleEmitterBar2 = 0;
 IParticleEmitter *gpParticleEmitterBar3 = 0;
 IParticleEmitter *gpParticleEmitterBar4 = 0;
 //ParticlePolygonComputeUpdater *gpParticleComputeUpdater = 0;
-ComputeUpdaterParticleReset *gpParticleReseter = 0;
-ComputeUpdaterParticleUpdater *gpParticleUpdater = 0;
+ComputeParticleReset *gpParticleReseter = 0;
+ComputeParticleUpdate *gpParticleUpdater = 0;
 
 // divide between the circle and the polygon regions
 // Note: 
@@ -283,7 +283,7 @@ void Init()
 
     // start up the encapsulation of the CPU side of the computer shader
     //gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderUpdateKey);
-	gpParticleReseter = new ComputeUpdaterParticleReset(MAX_PARTICLE_COUNT, computeShaderResetKey);
+	gpParticleReseter = new ComputeParticleReset(MAX_PARTICLE_COUNT, computeShaderResetKey);
 	//gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint1);
 	//gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint2);
 	//gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint3);
@@ -301,7 +301,7 @@ void Init()
 	gpParticleReseter->AddEmitter(gpParticleEmitterBar3);
 	gpParticleReseter->AddEmitter(gpParticleEmitterBar4);
 
-	gpParticleUpdater = new ComputeUpdaterParticleUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderUpdateKey);
+	gpParticleUpdater = new ComputeParticleUpdate(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderUpdateKey);
 
     // the timer will be used for framerate calculations
     gTimer.Init();

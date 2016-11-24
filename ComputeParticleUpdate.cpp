@@ -1,10 +1,10 @@
-#include "ComputeUpdaterParticleUpdate.h"
+#include "ComputeParticleUpdate.h"
 
 #include "ShaderStorage.h"
 #include "glload/include/glload/gl_4_4.h"
 
 // TODO: header
-ComputeUpdaterParticleUpdater::ComputeUpdaterParticleUpdater(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey)
+ComputeParticleUpdate::ComputeParticleUpdate(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey)
 {
 	_totalParticleCount = numParticles;
 	ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
@@ -54,14 +54,14 @@ ComputeUpdaterParticleUpdater::ComputeUpdaterParticleUpdater(unsigned int numPar
 }
 
 // TODO: header
-ComputeUpdaterParticleUpdater::~ComputeUpdaterParticleUpdater()
+ComputeParticleUpdate::~ComputeParticleUpdate()
 {
 	glDeleteBuffers(1, &_acParticleCounterBufferId);
 	glDeleteBuffers(1, &_acParticleCounterCopyBufferId);
 }
 
 // TODO: header
-unsigned int ComputeUpdaterParticleUpdater::Update(const float deltaTimeSec) const
+unsigned int ComputeParticleUpdate::Update(const float deltaTimeSec) const
 {
 	// spread out the particles between lots of work items, but keep it 1-dimensional for easy 
 	// navigation through a 1-dimensional particle buffer
