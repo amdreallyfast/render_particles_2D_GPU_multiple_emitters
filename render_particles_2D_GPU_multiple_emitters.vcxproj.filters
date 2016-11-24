@@ -38,10 +38,10 @@
     <ClCompile Include="ParticlePolygonRegion.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ComputeUpdaterParticleReset.cpp">
+    <ClCompile Include="ComputeParticleUpdate.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ComputeUpdaterParticleUpdate.cpp">
+    <ClCompile Include="ComputParticleReset.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
   </ItemGroup>
@@ -90,10 +90,10 @@
     <ClInclude Include="ParticlePolygonRegion.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeUpdaterParticleReset.h">
+    <ClInclude Include="ComputeParticleReset.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeUpdaterParticleUpdate.h">
+    <ClInclude Include="ComputeParticleUpdate.h">
       <Filter>Particles</Filter>
     </ClInclude>
   </ItemGroup>

@@ -46,8 +46,8 @@
 #include "PolygonSsbo.h"
 #include "ParticlePolygonRegion.h"
 //#include "ParticlePolygonComputeUpdater.h"
-#include "ComputeUpdaterParticleReset.h"
-#include "ComputeUpdaterParticleUpdate.h"
+#include "ComputeParticleReset.h"
+#include "ComputeParticleUpdate.h"
 
 // for moving the shapes around in window space
 #include "glm/gtc/matrix_transform.hpp"
