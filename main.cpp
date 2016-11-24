@@ -188,18 +188,23 @@ void Init()
     gTextAtlases.Init("FreeSans.ttf", freeTypeProgramId);
 
     // for the particle compute shader stuff
-    std::string computeShaderKey = "compute particles";
-    shaderStorageRef.NewShader(computeShaderKey);
-    shaderStorageRef.AddShaderFile(computeShaderKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
-    shaderStorageRef.LinkShader(computeShaderKey);
+    std::string computeShaderUpdateKey = "compute particle update";
+    shaderStorageRef.NewShader(computeShaderUpdateKey);
+    shaderStorageRef.AddShaderFile(computeShaderUpdateKey, "particlePolygonRegion.comp", GL_COMPUTE_SHADER);
+    unsigned int computeParticleUpdateProgramId = shaderStorageRef.LinkShader(computeShaderUpdateKey);
 
-    // a render shader specifically for the particles (particle color may change depending on 
+	std::string computeShaderResetKey = "compute particle reset";
+	shaderStorageRef.NewShader(computeShaderResetKey);
+	shaderStorageRef.AddShaderFile(computeShaderResetKey, "particleReset.comp", GL_COMPUTE_SHADER);
+	unsigned int computeParticleResetProgramId = shaderStorageRef.LinkShader(computeShaderResetKey);
+
+	// a render shader specifically for the particles (particle color may change depending on 
     // particle state, so it isn't the same as the geometry's render shader)
     std::string renderParticlesShaderKey = "render particles";
     shaderStorageRef.NewShader(renderParticlesShaderKey);
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.vert", GL_VERTEX_SHADER);
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.frag", GL_FRAGMENT_SHADER);
-    shaderStorageRef.LinkShader(renderParticlesShaderKey);
+	unsigned int renderParticlesProgramId = shaderStorageRef.LinkShader(renderParticlesShaderKey);
 
     // a render shader specifically for the geometry (nothing special; just a transform, color 
     // white, pass through to frag shader)
@@ -207,16 +212,31 @@ void Init()
     shaderStorageRef.NewShader(renderGeometryShaderKey);
     shaderStorageRef.AddShaderFile(renderGeometryShaderKey, "geometry.vert", GL_VERTEX_SHADER);
     shaderStorageRef.AddShaderFile(renderGeometryShaderKey, "geometry.frag", GL_FRAGMENT_SHADER);
-    shaderStorageRef.LinkShader(renderGeometryShaderKey);
+    unsigned int renderGeometryProgramId = shaderStorageRef.LinkShader(renderGeometryShaderKey);
     gUnifLocGeometryTransform = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "transformMatrixWindowSpace");
 
-    // the polygon region
+	// set up the polygon SSBO for computing and rendering
     std::vector<PolygonFace> polygonFaces;
     GeneratePolygonRegion(&polygonFaces);
     gpPolygonRegion = new ParticleRegionPolygon(polygonFaces);
-    gPolygonFaceBuffer.Init(
-        shaderStorageRef.GetShaderProgram(computeShaderKey),
-        shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+	gPolygonFaceBuffer.Init();
+	gPolygonFaceBuffer.ConfigureCompute(computeParticleUpdateProgramId);
+	gPolygonFaceBuffer.ConfigureCompute(computeParticleResetProgramId);
+	gPolygonFaceBuffer.ConfigureRender(renderGeometryProgramId);
+    //gPolygonFaceBuffer.Init(
+    //    shaderStorageRef.GetShaderProgram(computeShaderUpdateKey),
+    //    shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+
+	// set up the particle SSBO for computing and rendering
+	std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
+	gParticleBuffer.Init(allParticles);
+	gParticleBuffer.ConfigureCompute(computeParticleResetProgramId);
+	gParticleBuffer.ConfigureCompute(computeParticleResetProgramId);
+	gParticleBuffer.ConfigureRender(renderParticlesProgramId);
+	//gParticleBuffer.Init(allParticles, 
+	//    shaderStorageRef.GetShaderProgram(computeShaderUpdateKey),
+	//    shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+
 
     // place the point emitters into the corners of the polygon region
     // Note: Take into account that GeneratePolygonRegion(...) generates a polygon that covers 
@@ -258,7 +278,7 @@ void Init()
     gpParticleEmitterBar4 = new ParticleEmitterBar(barStart, barEnd, emitDir, 0.1f, 0.6f);
 
     // start up the encapsulation of the CPU side of the computer shader
-    gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderKey);
+    gpParticleComputeUpdater = new ParticlePolygonComputeUpdater(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderUpdateKey);
 	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint1);
 	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint2);
 	gpParticleComputeUpdater->AddEmitter(gpParticleEmitterPoint3);
@@ -267,13 +287,6 @@ void Init()
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar2);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar3);
     gpParticleComputeUpdater->AddEmitter(gpParticleEmitterBar4);
-    std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
-
-    // the particle buffer needs the particles to be initialized first by the compute updater's 
-    // InitParticleCollection(...)
-    gParticleBuffer.Init(allParticles, 
-        shaderStorageRef.GetShaderProgram(computeShaderKey),
-        shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
 
     // the timer will be used for framerate calculations
     gTimer.Init();
@@ -318,9 +331,15 @@ void Display()
     gpParticleEmitterBar4->SetTransform(windowSpaceTransform);
 
     // the MAGIC happens here
+
+	// reset inactive particles
+	// update active particles
     unsigned int numActiveParticles = 
         gpParticleComputeUpdater->Update(0.01f, windowSpaceTransform);
     
+	std::string computeShaderUpdateKey = "compute particle update";
+	std::string computeShaderResetKey = "compute particle reset";
+
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
     glUniformMatrix4fv(gUnifLocGeometryTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));

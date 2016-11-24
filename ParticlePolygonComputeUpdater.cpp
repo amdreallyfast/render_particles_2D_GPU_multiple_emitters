@@ -34,7 +34,7 @@ ParticlePolygonComputeUpdater::ParticlePolygonComputeUpdater(unsigned int numPar
     _unifLocParticleCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticleCount");
     _unifLocPolygonFaceCount = shaderStorageRef.GetUniformLocation(computeShaderKey, "uPolygonFaceCount");
 
-    glUseProgram(_computeProgramId);
+    //glUseProgram(_computeProgramId);
     glUniform1ui(_unifLocParticleCount, numParticles);
     glUniform1ui(_unifLocPolygonFaceCount, numFaces);
 
@@ -192,8 +192,12 @@ unsigned int ParticlePolygonComputeUpdater::Update(const float deltaTimeSec,
     GLuint numWorkGroupsY = 1;
     GLuint numWorkGroupsZ = 1;
 
-    // constant throughout the update
-    glUseProgram(_computeProgramId);
+    //// constant throughout the update
+    //glUseProgram(_computeProgramId);
+	std::string computeShaderResetKey = "compute particle reset";
+	GLuint programId = ShaderStorage::GetInstance().GetShaderProgram(computeShaderResetKey);
+	glUseProgram(programId);
+
 
     // just leave these in case I need them in a future program
     //glUniformMatrix4fv(_unifLocWindowSpaceRegionTransform, 1, GL_FALSE, glm::value_ptr(windowSpaceTransform));
@@ -258,6 +262,14 @@ unsigned int ParticlePolygonComputeUpdater::Update(const float deltaTimeSec,
         glDispatchCompute(numWorkGroupsX, numWorkGroupsY, numWorkGroupsZ);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
     }
+
+
+	//std::string computeShaderUpdateKey = "compute particle update";
+	//GLuint programId = ShaderStorage::GetInstance().GetShaderProgram(computeShaderUpdateKey);
+	//glUseProgram(programId);
+
+
+
 
     // position update for all active particles
     glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), (void *)&atomicCounterResetVal);

@@ -5,17 +5,31 @@
 /*-----------------------------------------------------------------------------------------------
 Description:
     Gives members default values.
+
+	Do NOT attempt to generate the buffer and VAO here.  The OpenGL context must be started up 
+	prior to calling OpenGL functions.  Prior to OpenGL context instantiation, any gl*(...) 
+	function calls will throw an exception.
+
+	//Generates an OpenGL buffer.  Does not bind it or set any data.  The buffer is simply 
+	//generated.  
+	//Ditto for the VAO.
 Parameters: None
 Returns:    None
 Creator: John Cox, 9-20-2016
 -----------------------------------------------------------------------------------------------*/
 SsboBase::SsboBase() :
-    _vaoId(0),
+	_hasBeenInitialized(false),
+	_vaoId(0),
     _bufferId(0),
     _drawStyle(0),
     _numVertices(0)
 {
 
+	//// generate the buffer so that the Init(...) functions can be called independently
+	//glGenBuffers(1, &_bufferId);
+
+	//// shader specific, but all SSBOs that are going to be drawn will use one
+	//glGenVertexArrays(1, &_vaoId);
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -28,8 +42,8 @@ Creator: John Cox, 9-20-2016
 -----------------------------------------------------------------------------------------------*/
 SsboBase::~SsboBase()
 {
-    glDeleteVertexArrays(1, &_vaoId);
     glDeleteBuffers(1, &_bufferId);
+	glDeleteVertexArrays(1, &_vaoId);
 }
 
 /*-----------------------------------------------------------------------------------------------

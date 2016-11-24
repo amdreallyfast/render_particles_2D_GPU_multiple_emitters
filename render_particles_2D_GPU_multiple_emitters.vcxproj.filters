@@ -107,6 +107,9 @@
     <None Include="particlePolygonRegion.comp">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="particleReset.comp">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Particles">

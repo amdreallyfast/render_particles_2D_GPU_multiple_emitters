@@ -170,6 +170,7 @@
     <None Include="particleRender.vert" />
     <None Include="geometry.frag" />
     <None Include="geometry.vert" />
+    <None Include="particleReset.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FreeTypeAtlas.h" />

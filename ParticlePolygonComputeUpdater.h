@@ -30,6 +30,7 @@ public:
 
     bool AddEmitter(const IParticleEmitter *pEmitter);
 
+	void ResetParticles(const std::string &c)
     unsigned int Update(const float deltaTimeSec, const glm::mat4 &windowSpaceTransform) const;
 
 private:
