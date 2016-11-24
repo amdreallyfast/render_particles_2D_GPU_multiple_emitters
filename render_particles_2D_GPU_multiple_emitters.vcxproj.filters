@@ -38,6 +38,12 @@
     <ClCompile Include="ParticlePolygonRegion.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
+    <ClCompile Include="ComputeUpdaterParticleReset.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeUpdaterParticleUpdate.cpp">
+      <Filter>Particles</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGlErrorHandling.h" />
@@ -82,6 +88,12 @@
       <Filter>Buffers</Filter>
     </ClInclude>
     <ClInclude Include="ParticlePolygonRegion.h">
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeUpdaterParticleReset.h">
+      <Filter>Particles</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeUpdaterParticleUpdate.h">
       <Filter>Particles</Filter>
     </ClInclude>
   </ItemGroup>

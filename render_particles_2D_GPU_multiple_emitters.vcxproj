@@ -146,6 +146,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ComputeUpdaterParticleReset.cpp" />
+    <ClCompile Include="ComputeUpdaterParticleUpdate.cpp" />
     <ClCompile Include="FreeTypeAtlas.cpp" />
     <ClCompile Include="FreeTypeEncapsulated.cpp" />
     <ClCompile Include="main.cpp" />
@@ -173,6 +175,8 @@
     <None Include="particleReset.comp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ComputeUpdaterParticleReset.h" />
+    <ClInclude Include="ComputeUpdaterParticleUpdate.h" />
     <ClInclude Include="FreeTypeAtlas.h" />
     <ClInclude Include="FreeTypeEncapsulated.h" />
     <ClInclude Include="MyVertex.h" />

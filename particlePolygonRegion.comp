@@ -347,30 +347,30 @@ void main()
     {
         Particle p = AllParticles[index];
 
-        if (uOnlyResetParticles == 1)
-        {
-            if (p._isActive == 0)
-            {
-                // only reactivate the particle if there is enough left in the particle limit for 
-                // this update
-                if (atomicCounterIncrement(acParticleCounter) < uMaxParticleEmitCount)
-                {
-                    if (uUsePointEmitter == 1)
-                    {
-                        // use the point emitter with whatever point was uploaded
-                        p = PointEmitterResetPos(p);
-                    }
-                    else
-                    {
-                        // use bar emitter
-                        p = BarEmitterResetPos(p);
-                    }
-                
-                    p._isActive = 1;
-                }
-            }
-        }
-        else
+//        if (uOnlyResetParticles == 1)
+//        {
+//            if (p._isActive == 0)
+//            {
+//                // only reactivate the particle if there is enough left in the particle limit for 
+//                // this update
+//                if (atomicCounterIncrement(acParticleCounter) < uMaxParticleEmitCount)
+//                {
+//                    if (uUsePointEmitter == 1)
+//                    {
+//                        // use the point emitter with whatever point was uploaded
+//                        p = PointEmitterResetPos(p);
+//                    }
+//                    else
+//                    {
+//                        // use bar emitter
+//                        p = BarEmitterResetPos(p);
+//                    }
+//                
+//                    p._isActive = 1;
+//                }
+//            }
+//        }
+//        else
         {
             // only update active particles 
             if (p._isActive == 1)

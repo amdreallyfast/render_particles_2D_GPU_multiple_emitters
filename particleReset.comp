@@ -216,7 +216,6 @@ Returns:
 Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 uniform vec4 uPointEmitterCenter;
-//uniform mat4 uWindowSpaceEmitterTransform;
 Particle PointEmitterResetPos(Particle p)
 {
     Particle pCopy = p;
@@ -272,6 +271,10 @@ Particle BarEmitterResetPos(Particle p)
 }
 
 uniform uint uUsePointEmitter;
+
+// this value is used to prevent uMaxParticleCount particles from being emitted all at once
+// Note: This is used when the particles are spread out on multiple emitters.
+uniform uint uMaxParticleEmitCount;
 
 /*-----------------------------------------------------------------------------------------------
 Description:
