@@ -20,7 +20,6 @@ public:
 	void ConfigureCompute(unsigned int computeProgramId) override;
 	void ConfigureRender(unsigned int renderProgramId) override;
 
-	//void Init(unsigned int computeProgramId, unsigned int renderProgramId);
 	void UpdateValues(const std::vector<PolygonFace> &faceCollection);
 
 private:

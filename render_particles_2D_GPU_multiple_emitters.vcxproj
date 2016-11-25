@@ -157,7 +157,6 @@
     <ClCompile Include="ParticleEmitterPoint.cpp" />
     <ClCompile Include="ParticlePolygonRegion.cpp" />
     <ClCompile Include="ParticleSsbo.cpp" />
-    <ClCompile Include="ParticlePolygonComputeUpdater.cpp" />
     <ClCompile Include="PolygonSsbo.cpp" />
     <ClCompile Include="RandomToast.cpp" />
     <ClCompile Include="ShaderStorage.cpp" />
@@ -173,7 +172,7 @@
     <None Include="geometry.frag" />
     <None Include="geometry.vert" />
     <None Include="particleReset.comp" />
-    <None Include="particleUpdater.comp" />
+    <None Include="particleUpdate.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComputeParticleReset.h" />
@@ -191,7 +190,6 @@
     <ClInclude Include="ParticleEmitterBar.h" />
     <ClInclude Include="ParticleEmitterPoint.h" />
     <ClInclude Include="ParticleSsbo.h" />
-    <ClInclude Include="ParticlePolygonComputeUpdater.h" />
     <ClInclude Include="PolygonFace.h" />
     <ClInclude Include="RandomToast.h" />
     <ClInclude Include="ShaderStorage.h" />

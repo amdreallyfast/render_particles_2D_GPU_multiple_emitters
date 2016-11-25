@@ -6,7 +6,7 @@ layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 // like this and cannot be bound dynamically as in ParticleSsbo and PolygonSsbo, so declare 
 // the atomic counters up front to make it easier to keep the numbers straight.
 // Note: Discovered by experience and through this: https://www.opengl.org/wiki/Atomic_Counter.
-layout (binding = 0, offset = 0) uniform atomic_uint acParticleCounter;
+layout (binding = 0, offset = 0) uniform atomic_uint acActiveParticleCounter;
 
 
 /*-----------------------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ void main()
         {
             // when the compute shader is summoned to update active particles, this counter 
             // will give a count of how many active particles exist
-            atomicCounterIncrement(acParticleCounter);
+            atomicCounterIncrement(acActiveParticleCounter);
 
             vec4 deltaPosition = p._vel * uDeltaTimeSec;
             p._pos = p._pos + deltaPosition;

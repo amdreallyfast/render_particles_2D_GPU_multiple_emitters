@@ -36,6 +36,4 @@ protected:
     unsigned int _bufferId;
     unsigned int _drawStyle;    // GL_TRIANGLES, GL_LINES, etc.
     unsigned int _numVertices;
-
-    //??binding point index? http://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/ ??
 };

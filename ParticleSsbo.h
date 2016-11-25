@@ -8,8 +8,8 @@
 Description:
     Encapsulates the SSBO that stores Particles.  It generates a chunk of space on the GPU that 
     is big enough to store the requested number of particles, and since this buffer will be used 
-    a drawing shader as well as a compute shader, this class will also up the VAO and the vertex 
-    attributes.
+    in a drawing shader as well as a compute shader, this class will also up the VAO and the 
+    vertex attributes.
 Creator:    John Cox (9-3-2016)
 -----------------------------------------------------------------------------------------------*/
 class ParticleSsbo : public SsboBase
@@ -21,8 +21,5 @@ public:
 	void Init(const std::vector<Particle> &allParticles);
 	void ConfigureCompute(unsigned int computeProgramId) override;
 	void ConfigureRender(unsigned int renderProgramId) override;
-
-    //void Init(const std::vector<Particle> &allParticles, unsigned int computeProgramId, 
-    //    unsigned int renderProgramId);
 };
 

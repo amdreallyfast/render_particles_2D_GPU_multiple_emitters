@@ -3,7 +3,21 @@
 #include "ShaderStorage.h"
 #include "glload/include/glload/gl_4_4.h"
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+	Generates atomic counters for use in the "particle update" compute shader.
+    Looks up all uniforms in the compute shader.
+
+	Note: This constructor takes a string key for the compute shader instead of a program ID 
+	because the shader storage object, which is responsible for finding uniforms, takes a shader 
+	key instead of a direct program ID.
+Parameters: 
+    numParticles        Used to tell a shader uniform how big the "all particles" buffer is.
+    numFaces            Used to tell a shader uniform how many polygon faces are in play.
+    computeShaderKey    Used to look up (1) the compute shader ID and (2) uniform locations.
+Returns:    None
+Creator:    John Cox (11-24-2016)
+-----------------------------------------------------------------------------------------------*/
 ComputeParticleUpdate::ComputeParticleUpdate(unsigned int numParticles, unsigned int numFaces, const std::string &computeShaderKey)
 {
 	_totalParticleCount = numParticles;
@@ -53,14 +67,30 @@ ComputeParticleUpdate::ComputeParticleUpdate(unsigned int numParticles, unsigned
 	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, _acParticleCounterBufferId);
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Cleans up buffers that were allocated in this object.
+Parameters: None
+Returns:    None
+Creator:    John Cox (10-10-2016)	(created prior to this class in an earlier design)
+-----------------------------------------------------------------------------------------------*/
 ComputeParticleUpdate::~ComputeParticleUpdate()
 {
 	glDeleteBuffers(1, &_acParticleCounterBufferId);
 	glDeleteBuffers(1, &_acParticleCounterCopyBufferId);
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Examines all active particles and:
+    (1) updates their position based on velocity and delta time
+    (2) checks if they have gone outside the polygon bounds, and if so, deactives them
+Parameters:	
+    deltaTimeSec    Self-explanatory
+Returns:    None
+Creator:    John Cox (10-10-2016)
+            (created in an earlier class, but later split into a dedicated class)
+-----------------------------------------------------------------------------------------------*/
 unsigned int ComputeParticleUpdate::Update(const float deltaTimeSec) const
 {
 	// spread out the particles between lots of work items, but keep it 1-dimensional for easy 

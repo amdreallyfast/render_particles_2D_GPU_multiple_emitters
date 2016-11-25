@@ -23,9 +23,6 @@
     <ClCompile Include="Stopwatch.cpp">
       <Filter>RenderFrameRate</Filter>
     </ClCompile>
-    <ClCompile Include="ParticlePolygonComputeUpdater.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
     <ClCompile Include="ParticleSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
@@ -73,9 +70,6 @@
     <ClInclude Include="Stopwatch.h">
       <Filter>RenderFrameRate</Filter>
     </ClInclude>
-    <ClInclude Include="ParticlePolygonComputeUpdater.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
     <ClInclude Include="ParticleSsbo.h">
       <Filter>Buffers</Filter>
     </ClInclude>
@@ -122,7 +116,7 @@
     <None Include="particleReset.comp">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="particleUpdater.comp">
+    <None Include="particleUpdate.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
