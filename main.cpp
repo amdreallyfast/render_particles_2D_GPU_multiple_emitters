@@ -192,21 +192,21 @@ void Init()
     // for the particle compute shader stuff
     std::string computeShaderUpdateKey = "compute particle update";
     shaderStorageRef.NewShader(computeShaderUpdateKey);
-	shaderStorageRef.AddShaderFile(computeShaderUpdateKey, "particleUpdate.comp", GL_COMPUTE_SHADER);
+    shaderStorageRef.AddShaderFile(computeShaderUpdateKey, "particleUpdate.comp", GL_COMPUTE_SHADER);
     shaderStorageRef.LinkShader(computeShaderUpdateKey);
 
-	std::string computeShaderResetKey = "compute particle reset";
-	shaderStorageRef.NewShader(computeShaderResetKey);
-	shaderStorageRef.AddShaderFile(computeShaderResetKey, "particleReset.comp", GL_COMPUTE_SHADER);
-	shaderStorageRef.LinkShader(computeShaderResetKey);
+    std::string computeShaderResetKey = "compute particle reset";
+    shaderStorageRef.NewShader(computeShaderResetKey);
+    shaderStorageRef.AddShaderFile(computeShaderResetKey, "particleReset.comp", GL_COMPUTE_SHADER);
+    shaderStorageRef.LinkShader(computeShaderResetKey);
 
-	// a render shader specifically for the particles (particle color may change depending on 
+    // a render shader specifically for the particles (particle color may change depending on 
     // particle state, so it isn't the same as the geometry's render shader)
     std::string renderParticlesShaderKey = "render particles";
     shaderStorageRef.NewShader(renderParticlesShaderKey);
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.vert", GL_VERTEX_SHADER);
     shaderStorageRef.AddShaderFile(renderParticlesShaderKey, "particleRender.frag", GL_FRAGMENT_SHADER);
-	shaderStorageRef.LinkShader(renderParticlesShaderKey);
+    shaderStorageRef.LinkShader(renderParticlesShaderKey);
 
     // a render shader specifically for the geometry (nothing special; just a transform, color 
     // white, pass through to frag shader)
@@ -217,20 +217,20 @@ void Init()
     shaderStorageRef.LinkShader(renderGeometryShaderKey);
     gUnifLocGeometryTransform = shaderStorageRef.GetUniformLocation(renderGeometryShaderKey, "transformMatrixWindowSpace");
 
-	// set up the polygon SSBO for computing and rendering
+    // set up the polygon SSBO for computing and rendering
     std::vector<PolygonFace> polygonFaces;
     GeneratePolygonRegion(&polygonFaces);
     gpPolygonRegion = new ParticleRegionPolygon(polygonFaces);
-	gPolygonFaceBuffer.Init();
-	gPolygonFaceBuffer.ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderUpdateKey));
-	gPolygonFaceBuffer.ConfigureRender(shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
+    gPolygonFaceBuffer.Init();
+    gPolygonFaceBuffer.ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderUpdateKey));
+    gPolygonFaceBuffer.ConfigureRender(shaderStorageRef.GetShaderProgram(renderGeometryShaderKey));
 
-	// set up the particle SSBO for computing and rendering
-	std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
-	gParticleBuffer.Init(allParticles);
-	gParticleBuffer.ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderResetKey));
-	gParticleBuffer.ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderUpdateKey));
-	gParticleBuffer.ConfigureRender(shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
+    // set up the particle SSBO for computing and rendering
+    std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
+    gParticleBuffer.Init(allParticles);
+    gParticleBuffer.ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderResetKey));
+    gParticleBuffer.ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderUpdateKey));
+    gParticleBuffer.ConfigureRender(shaderStorageRef.GetShaderProgram(renderParticlesShaderKey));
 
     // place the point emitters into the corners of the polygon region
     // Note: Take into account that GeneratePolygonRegion(...) generates a polygon that covers 
@@ -272,17 +272,17 @@ void Init()
     gpParticleEmitterBar4 = new ParticleEmitterBar(barStart, barEnd, emitDir, 0.1f, 0.6f);
 
     // start up the encapsulation of the CPU side of the computer shader
-	gpParticleReseter = new ComputeParticleReset(MAX_PARTICLE_COUNT, computeShaderResetKey);
-	gpParticleReseter->AddEmitter(gpParticleEmitterPoint1);
-	gpParticleReseter->AddEmitter(gpParticleEmitterPoint2);
-	gpParticleReseter->AddEmitter(gpParticleEmitterPoint3);
-	gpParticleReseter->AddEmitter(gpParticleEmitterPoint4);
-	gpParticleReseter->AddEmitter(gpParticleEmitterBar1);
-	gpParticleReseter->AddEmitter(gpParticleEmitterBar2);
-	gpParticleReseter->AddEmitter(gpParticleEmitterBar3);
-	gpParticleReseter->AddEmitter(gpParticleEmitterBar4);
+    gpParticleReseter = new ComputeParticleReset(MAX_PARTICLE_COUNT, computeShaderResetKey);
+    gpParticleReseter->AddEmitter(gpParticleEmitterPoint1);
+    gpParticleReseter->AddEmitter(gpParticleEmitterPoint2);
+    gpParticleReseter->AddEmitter(gpParticleEmitterPoint3);
+    gpParticleReseter->AddEmitter(gpParticleEmitterPoint4);
+    gpParticleReseter->AddEmitter(gpParticleEmitterBar1);
+    gpParticleReseter->AddEmitter(gpParticleEmitterBar2);
+    gpParticleReseter->AddEmitter(gpParticleEmitterBar3);
+    gpParticleReseter->AddEmitter(gpParticleEmitterBar4);
 
-	gpParticleUpdater = new ComputeParticleUpdate(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderUpdateKey);
+    gpParticleUpdater = new ComputeParticleUpdate(MAX_PARTICLE_COUNT, polygonFaces.size(), computeShaderUpdateKey);
 
     // the timer will be used for framerate calculations
     gTimer.Init();
@@ -327,13 +327,13 @@ void Display()
     gpParticleEmitterBar4->SetTransform(windowSpaceTransform);
 
 
-	// reset inactive particles and update active particles (the MAGIC happens here)
-	// Note: 20 particles per emitter per frame * 8 emitters * 60 frames per second stabilizes 
+    // reset inactive particles and update active particles (the MAGIC happens here)
+    // Note: 20 particles per emitter per frame * 8 emitters * 60 frames per second stabilizes 
     // (for this particle region and the emitters' min-max spawn velocities) at ~45,000 active 
     // particles in one moment.
-	// Also Note: 50 easily maxes out the maximuum 100,000 total particles active at one time.
-	gpParticleReseter->ResetParticles(20);
-	unsigned int numActiveParticles = gpParticleUpdater->Update(0.01f);
+    // Also Note: 50 easily maxes out the maximuum 100,000 total particles active at one time.
+    gpParticleReseter->ResetParticles(20);
+    unsigned int numActiveParticles = gpParticleUpdater->Update(0.01f);
     
     // draw the particle region borders
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render geometry"));
@@ -495,8 +495,8 @@ void CleanupAll()
     delete gpParticleEmitterBar2;
     delete gpParticleEmitterBar3;
     delete gpParticleEmitterBar4;
-	delete gpParticleReseter;
-	delete gpParticleUpdater;
+    delete gpParticleReseter;
+    delete gpParticleUpdater;
 }
 
 /*-----------------------------------------------------------------------------------------------

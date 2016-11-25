@@ -20,8 +20,8 @@ ParticleEmitterBar::ParticleEmitterBar(const glm::vec2 &p1, const glm::vec2 &p2,
     // the start and end points should be translatable
     _start = glm::vec4(p1, 0.0f, 1.0f);
     _end = glm::vec4(p2, 0.0f, 1.0f);
-	_minVel = minVel;
-	_deltaVelocity = maxVel - minVel;
+    _minVel = minVel;
+    _deltaVelocity = maxVel - minVel;
 
     // emission direction should not be translatable; like a normal, it should only be rotatable
     _emitDir = glm::vec4(emitDir, 0.0f, 0.0f);
@@ -83,7 +83,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterBar::GetMinVelocity() const
 {
-	return _minVel;
+    return _minVel;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterBar::GetDeltaVelocity() const
 {
-	return _deltaVelocity;
+    return _deltaVelocity;
 }
 
 /*-----------------------------------------------------------------------------------------------

@@ -38,7 +38,7 @@
     <ClCompile Include="ComputeParticleUpdate.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
-    <ClCompile Include="ComputParticleReset.cpp">
+    <ClCompile Include="ComputeParticleReset.cpp">
       <Filter>Particles</Filter>
     </ClCompile>
   </ItemGroup>

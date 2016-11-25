@@ -146,8 +146,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ComputeParticleReset.cpp" />
     <ClCompile Include="ComputeParticleUpdate.cpp" />
-    <ClCompile Include="ComputParticleReset.cpp" />
     <ClCompile Include="FreeTypeAtlas.cpp" />
     <ClCompile Include="FreeTypeEncapsulated.cpp" />
     <ClCompile Include="main.cpp" />

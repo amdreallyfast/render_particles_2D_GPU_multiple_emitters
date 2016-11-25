@@ -168,13 +168,13 @@ void main()
                 p._isActive = 0;
             }                
 
-			// copy the updated one back into the array
-			AllParticles[index] = p;
+            // copy the updated one back into the array
+            AllParticles[index] = p;
         }
-		else
-		{
-			// particle inactive, so nuttin' to do
-		}
+        else
+        {
+            // particle inactive, so nuttin' to do
+        }
     }
 }
 

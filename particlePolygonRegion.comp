@@ -137,7 +137,7 @@ vec4 LinearMix(vec4 v1, vec4 v2, float Between0And1)
 /*-----------------------------------------------------------------------------------------------
 Description:
     Generate a semi-random number on the range [0,+1] (I think; I don't know if it actually hits 
-	0 or +1).  Found online:
+    0 or +1).  Found online:
     http://stackoverflow.com/questions/12964279/whats-the-origin-of-this-glsl-rand-one-liner
 
     Like rand() on the CPU side, this is a chaotic hash function whose output is only as random 
@@ -146,14 +146,14 @@ Description:
     CPU's clock counter, nor is there access to any of the GPU's clock counters, so inputs must 
     be provided by the user.
 
-	I changed the source function to use atomic counter instead of taking a vec2 so that I 
-	wouldn't have to rely on initial values being provided by the CPU side of the program.  This 
-	way I can initialize the particle buffer with default values and get rid of some code.
+    I changed the source function to use atomic counter instead of taking a vec2 so that I 
+    wouldn't have to rely on initial values being provided by the CPU side of the program.  This 
+    way I can initialize the particle buffer with default values and get rid of some code.
 
-	Note: This random hash has its limits.  When provided two sequential integers from the 
-	atomic counter, there is a little bit of banding in the bar emitters, but the point emitters 
-	look good enough, so I can live with this.  I don't need encryption-level randomness for a 
-	particle simulation.
+    Note: This random hash has its limits.  When provided two sequential integers from the 
+    atomic counter, there is a little bit of banding in the bar emitters, but the point emitters 
+    look good enough, so I can live with this.  I don't need encryption-level randomness for a 
+    particle simulation.
 Parameters: None
 Returns:
     A semi-random float.
@@ -161,22 +161,22 @@ Creator: John Cox (9-25-2016)
 -----------------------------------------------------------------------------------------------*/
 float RandomOnRange0To1()
 {
-	// increment the rand seed counter, but NOT the particle counter (that is for main())
-	// Note: Using two atomic counters because it was discovered by experience that passing in 
-	// two sequential values wasn't random enough for personal taste.  There was some banding 
-	// that was observed in the bar emitters, and using two counters that are likely to have 
-	// very different values seems to have fixed the problem.
-	float val1 = atomicCounterIncrement(acRandSeed);
-	float val2 = atomicCounter(acParticleCounter);
-	return fract(sin(dot(vec2(val1, val2) ,vec2(12.9898,78.233))) * 43758.5453);
+    // increment the rand seed counter, but NOT the particle counter (that is for main())
+    // Note: Using two atomic counters because it was discovered by experience that passing in 
+    // two sequential values wasn't random enough for personal taste.  There was some banding 
+    // that was observed in the bar emitters, and using two counters that are likely to have 
+    // very different values seems to have fixed the problem.
+    float val1 = atomicCounterIncrement(acRandSeed);
+    float val2 = atomicCounter(acParticleCounter);
+    return fract(sin(dot(vec2(val1, val2) ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
 /*-----------------------------------------------------------------------------------------------
 Description:
     A convenience function that generates a single number on the range [-1,+1] (again, I don't 
-	know if it actually hits -1 or +1 exactly).  It is used to generate random X and Y velocity 
-	vectors for newly-eminating particles.  
-Parameters:	None
+    know if it actually hits -1 or +1 exactly).  It is used to generate random X and Y velocity 
+    vectors for newly-eminating particles.  
+Parameters:    None
 Returns:
     A semi-random float on the range [-1,+1].
 Creator: John Cox (9-25-2016)
@@ -239,7 +239,7 @@ Description:
     the calculation is a variance on the delta.
 
     Used for both point and bar emitters.
-Parameters:	None
+Parameters:    None
 Returns:
     A semi-random float on the range uMinParticleVelocity + (rand0To1 * uDeltaParticleVelocity).
 Creator: John Cox (10-10-2016)

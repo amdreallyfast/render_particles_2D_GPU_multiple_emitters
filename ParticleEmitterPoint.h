@@ -25,6 +25,6 @@ public:
 private:
     glm::vec4 _pos;
     glm::vec4 _transformedPos;
-	float _minVel;
-	float _deltaVelocity;
+    float _minVel;
+    float _deltaVelocity;
 };

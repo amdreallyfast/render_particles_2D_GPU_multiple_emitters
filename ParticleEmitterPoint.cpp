@@ -18,8 +18,8 @@ ParticleEmitterPoint::ParticleEmitterPoint(const glm::vec2 &emitterPos, const fl
 {
     // this demo is in window space, so Z pos is 0, but let it be translatable (4th value is 1)
     _pos = glm::vec4(emitterPos, 0.0f, 1.0f);
-	_minVel = minVel;
-	_deltaVelocity = maxVel - minVel;
+    _minVel = minVel;
+    _deltaVelocity = maxVel - minVel;
 
     // the transformed variants begin equal to the original points, then diverge after 
     // SetTransform(...) is called
@@ -50,7 +50,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterPoint::GetMinVelocity() const
 {
-	return _minVel;
+    return _minVel;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ Creator:    John Cox (10-10-2016)
 -----------------------------------------------------------------------------------------------*/
 float ParticleEmitterPoint::GetDeltaVelocity() const
 {
-	return _deltaVelocity;
+    return _deltaVelocity;
 }
 
 /*-----------------------------------------------------------------------------------------------

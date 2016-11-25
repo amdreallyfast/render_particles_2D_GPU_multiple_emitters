@@ -29,8 +29,8 @@ private:
     glm::vec4 _start;
     glm::vec4 _end;
     glm::vec4 _emitDir;
-	float _minVel;
-	float _deltaVelocity;
+    float _minVel;
+    float _deltaVelocity;
 
     glm::vec4 _transformedStart;
     glm::vec4 _transformedEnd;

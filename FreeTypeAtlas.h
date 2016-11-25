@@ -73,8 +73,8 @@ private:
         float nbh;
 
         // TODO: change to "texture S" and "texture T" to be clear
-        float tx;	// x offset of glyph in texture coordinates (S on range [0.0,1.0])
-        float ty;	// y offset of glyph in texture coordinates (T on range [0.0,1.0])
+        float tx;    // x offset of glyph in texture coordinates (S on range [0.0,1.0])
+        float ty;    // y offset of glyph in texture coordinates (T on range [0.0,1.0])
     } _glyphCharInfo[128];
 
     // the atlas needs to tell the fragment shader which texture sampler and texture color 

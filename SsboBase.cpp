@@ -6,16 +6,16 @@
 Description:
     Gives members default values.
 
-	Do NOT attempt to generate the buffer and VAO here.  The OpenGL context must be started up 
-	prior to calling OpenGL functions.  Prior to OpenGL context instantiation, any gl*(...) 
-	function calls will throw an exception.
+    Do NOT attempt to generate the buffer and VAO here.  The OpenGL context must be started up 
+    prior to calling OpenGL functions.  Prior to OpenGL context instantiation, any gl*(...) 
+    function calls will throw an exception.
 Parameters: None
 Returns:    None
 Creator: John Cox, 9-20-2016
 -----------------------------------------------------------------------------------------------*/
 SsboBase::SsboBase() :
-	_hasBeenInitialized(false),
-	_vaoId(0),
+    _hasBeenInitialized(false),
+    _vaoId(0),
     _bufferId(0),
     _drawStyle(0),
     _numVertices(0)
@@ -33,7 +33,7 @@ Creator: John Cox, 9-20-2016
 SsboBase::~SsboBase()
 {
     glDeleteBuffers(1, &_bufferId);
-	glDeleteVertexArrays(1, &_vaoId);
+    glDeleteVertexArrays(1, &_vaoId);
 }
 
 /*-----------------------------------------------------------------------------------------------
